@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\models\forms;
+namespace ytubes\admin\videos\models\forms;
 
 use Yii;
 use SplFileObject;
@@ -13,9 +13,7 @@ use yii\web\NotFoundHttpException;
 use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use common\helpers\URLify;
-
-use backend\modules\videos\models\VideosCategories;
+use ytubes\admin\videos\models\VideosCategories;
 
 /**
  * Модель для обработки формы импорта категорий через цсв файлы или просто текст.
@@ -167,7 +165,7 @@ class CategoriesImport extends \yii\base\Model
 		$category->attributes = $newCategory;
 
 		if (!isset($newCategory['slug']) || empty($newCategory['slug'])) {
-			$category->slug = URLify::filter($newCategory['title']);
+			$category->slug = \URLify::filter($newCategory['title']);
 		}
 
 		if ($category->isNewRecord) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\models\repositories;
+namespace ytubes\admin\videos\models\repositories;
 
 use Yii;
 
@@ -9,9 +9,9 @@ use yii\web\NotFoundHttpException;
 use yii\data\ActiveDataProvider;
 use yii\data\Sort;
 
-use backend\modules\videos\models\Videos;
-use backend\modules\videos\models\VideosStats;
-use backend\modules\videos\models\VideosCategories;
+use ytubes\admin\videos\models\Videos;
+use ytubes\admin\videos\models\VideosStats;
+use ytubes\admin\videos\models\VideosCategories;
 
 /**
  * VideosRepository represents the model behind the search form about `frontend\models\videos\Videos`.

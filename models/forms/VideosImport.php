@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\models\forms;
+namespace ytubes\admin\videos\models\forms;
 
 use Yii;
 use SplFileObject;
@@ -13,10 +13,10 @@ use yii\web\NotFoundHttpException;
 use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use backend\modules\videos\models\Videos;
-use backend\modules\videos\models\VideosCategories;
-use backend\modules\videos\models\VideosImages;
-use backend\modules\videos\models\VideosStats;
+use ytubes\admin\videos\models\Videos;
+use ytubes\admin\videos\models\VideosCategories;
+use ytubes\admin\videos\models\VideosImages;
+use ytubes\admin\videos\models\VideosStats;
 
 /**
  * Пометка: Сделать проверку на соответствие полей. Если не соответствует - писать в лог.

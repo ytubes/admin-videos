@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\controllers;
+namespace ytubes\admin\videos\controllers;
 
 use Yii;
 
@@ -11,8 +11,8 @@ use yii\web\NotFoundHttpException;
 
 use yii\data\ActiveDataProvider;
 
-use backend\models\videos\Videos;
-use backend\models\videos\forms\VideosImport;
+use ytubes\admin\videos\models\Videos;
+use ytubes\admin\videos\models\forms\VideosImport;
 
 /**
  * VideosController implements the CRUD actions for Videos model.

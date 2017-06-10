@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\models;
+namespace ytubes\admin\videos\models;
 
 use Yii;
 
@@ -49,7 +49,7 @@ class VideosCategories extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'require'],
+            [['title'], 'required'],
             [['title', 'h1', 'image'], 'string', 'max' => 255],
             [['meta_description'], 'string', 'max' => 200],
             [['slug', 'meta_title'], 'string', 'max' => 70],

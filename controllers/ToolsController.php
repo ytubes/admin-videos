@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\controllers;
+namespace ytubes\admin\videos\controllers;
 
 use Yii;
 
@@ -12,9 +12,9 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 
 
-use backend\models\videos\VideosCategories;
-use backend\models\videos\forms\CategoriesImport;
-use backend\models\videos\forms\Tools;
+use ytubes\admin\videos\models\VideosCategories;
+use ytubes\admin\videos\models\forms\CategoriesImport;
+use ytubes\admin\videos\models\forms\Tools;
 
 /**
  * ToolsController implements the CRUD actions for Tools model.

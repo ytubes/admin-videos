@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos\controllers;
+namespace ytubes\admin\videos\controllers;
 
 use Yii;
 
@@ -19,8 +19,8 @@ use yii\web\Request;
 use yii\web\Response;
 
 
-use backend\models\videos\VideosCategories;
-use backend\models\videos\forms\CategoriesImport;
+use ytubes\admin\videos\models\VideosCategories;
+use ytubes\admin\videos\models\CategoriesImport;
 
 /**
  * CategoriesController implements the CRUD actions for VideosCategories model.

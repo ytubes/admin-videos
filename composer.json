@@ -2,7 +2,10 @@
     "name": "ytubes/admin-videos",
     "description": "Пакет для администрирования видео",
     "require": {
-        "php": "^5.6 || ^7.0"
+        "php": "^5.6 || ^7.0",
+        "yiisoft/yii2": "~2.0.9",
+        "yiisoft/yii2-jui": "~2.0.0",
+        "jbroadway/urlify": "^1.1"
     },
     "autoload": {
         "psr-4": {
