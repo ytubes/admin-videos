@@ -6,7 +6,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ytubes\\admin-videos": ""
+            "ytubes\\admin\\videos\\": ""
         }
     }
 }
