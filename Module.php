@@ -1,6 +1,6 @@
 <?php
 
-namespace backend\modules\videos;
+namespace ytubes\admin\videos;
 
 use Yii;
 
@@ -12,7 +12,7 @@ class Module extends \yii\base\Module
     /**
      * @inheritdoc
      */
-    public $controllerNamespace = 'backend\modules\videos\controllers';
+    public $controllerNamespace = 'ytubes\admin\videos\controllers';
 
     /**
      * @inheritdoc
