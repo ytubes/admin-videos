@@ -1,0 +1,7 @@
+{
+    "name": "ytubes/admin-videos",
+    "description": "Пакет для администрирования видео",
+    "require": {
+        "php": "^5.6 || ^7.0"
+    }
+}
