@@ -13,7 +13,7 @@ $this->params['subtitle'] = 'Видео';
 $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->params['subtitle'];
 
-$progress = ($category_item['total_rows'] > 0) ? round(($data['tested_rows'] / $data['total_rows'] * 100), 2) : 0;
+$progress = ($data['total_rows'] > 0) ? round(($data['tested_rows'] / $data['total_rows'] * 100), 2) : 0;
 
 ?>
 
