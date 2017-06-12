@@ -20,7 +20,7 @@ use yii\web\Response;
 
 
 use ytubes\admin\videos\models\VideosCategories;
-use ytubes\admin\videos\models\CategoriesImport;
+use ytubes\admin\videos\models\forms\CategoriesImport;
 
 /**
  * CategoriesController implements the CRUD actions for VideosCategories model.
