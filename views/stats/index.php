@@ -77,7 +77,7 @@ $progress = ($data['total_rows'] > 0) ? round(($data['tested_rows'] / $data['tot
 
 				<div class="box-footer clearfix">
 				    <div class="form-group">
-						<?= Html::a('<i class="fa fa-fw fa-refresh"></i> Обновить', ['videos'], ['class' => 'btn btn-primary']) ?>
+						<?= Html::a('<i class="fa fa-fw fa-refresh"></i> Обновить', ['/videos/stats/index'], ['class' => 'btn btn-primary']) ?>
 					</div>
 				</div>
 
