@@ -6,8 +6,11 @@ use Yii;
 
 use yii\web\NotFoundHttpException;
 
+use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\data\Sort;
+
+
 
 use ytubes\admin\videos\models\Videos;
 use ytubes\admin\videos\models\VideosStats;
@@ -16,21 +19,21 @@ use ytubes\admin\videos\models\VideosCategories;
 /**
  * VideosRepository represents the model behind the search form about `frontend\models\videos\Videos`.
  */
-class VideosRepository extends \yii\base\Model
+class VideosRepository extends Model
 {
-	public $slug;
-	public $page;
+    public $slug;
+    public $page;
 
-	private $totalItems;
+    private $totalItems;
 
-	private $sort;
-	protected $params;
+    private $sort;
+    protected $params;
 
-	public function __construct($config = [])
-	{
-		$this->params = Yii::$app->params['videos'];
-		parent::__construct($config);
-	}
+    public function __construct($config = [])
+    {
+        $this->params = Yii::$app->params['videos'];
+        parent::__construct($config);
+    }
 
     /**
      * @inheritdoc
@@ -38,9 +41,9 @@ class VideosRepository extends \yii\base\Model
     public function rules()
     {
         return [
-        	[['slug'], 'string'],
-        	['page', 'integer', 'min' => 1],
-			['page', 'default', 'value' => 1],
+            [['slug'], 'string'],
+            ['page', 'integer', 'min' => 1],
+            ['page', 'default', 'value' => 1],
             /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_count', 'views', 'status'], 'integer'],
             [['slug', 'title', 'description', 'short_description', 'video_url', 'embed', 'published_at', 'created_at', 'updated_at'], 'safe'],*/
         ];
@@ -55,12 +58,12 @@ class VideosRepository extends \yii\base\Model
         return Model::scenarios();
     }
 
-	/**
-	 * Получает ролики постранично в разделе "все", отсортированные по дате.
-	 */
-	public function getAllItems($params)
-	{
-		$videos = [];
+    /**
+     * Получает ролики постранично в разделе "все", отсортированные по дате.
+     */
+    public function getAllItems($params)
+    {
+        $videos = [];
 
         $this->load($params);
 
@@ -69,33 +72,33 @@ class VideosRepository extends \yii\base\Model
             return $videos;
         }
 
-		$videosSearch = Videos::find()
-			->with(['categories' => function ($categoryQquery) {
-				$categoryQquery->select(['category_id', 'title', 'slug', 'h1']);
-			}])
-			->with('image')
-			->where(['status' => 10]);
+        $videosSearch = Videos::find()
+            ->with(['categories' => function ($categoryQquery) {
+                $categoryQquery->select(['category_id', 'title', 'slug', 'h1']);
+            }])
+            ->with('image')
+            ->where(['status' => 10]);
 
-		$counter = clone $videosSearch;
-		$this->totalItems = $counter->count();
+        $counter = clone $videosSearch;
+        $this->totalItems = $counter->count();
 
-		$items_per_page = (int) $this->params['items_per_page'];
-		$offset = ($this->page - 1 ) * $items_per_page;
+        $items_per_page = (int) $this->params['items_per_page'];
+        $offset = ($this->page - 1 ) * $items_per_page;
 
         $videos = $videosSearch->orderBy(['published_at' => SORT_DESC])
-        	->limit($items_per_page)
-        	->offset($offset)
-        	->all();
+            ->limit($items_per_page)
+            ->offset($offset)
+            ->all();
 
         return $videos;
-	}
+    }
 
-	/**
-	 * Получает ролики для категории.
-	 */
-	public function getItemsFromCategory($params, VideosCategories $category)
-	{
-		$videos = [];
+    /**
+     * Получает ролики для категории.
+     */
+    public function getItemsFromCategory($params, VideosCategories $category)
+    {
+        $videos = [];
 
         $this->load($params);
 
@@ -104,167 +107,171 @@ class VideosRepository extends \yii\base\Model
             return $videos;
         }
 
-		$totalTestedItems = $this->countItems($category->category_id, 1);
-		$totalTestItems = $this->countItems($category->category_id, 0);
-		$this->totalItems = $totalTestedItems + $totalTestItems;//$this->countTotalItems($category->category_id);
+        $totalTestedItems = $this->countItems($category->category_id, 1);
+        $totalTestItems = $this->countItems($category->category_id, 0);
+        $this->totalItems = $totalTestedItems + $totalTestItems;//$this->countTotalItems($category->category_id);
 
-	    if ($this->totalItems > 0) {
+        if ($this->totalItems > 0) {
 
-			$items_per_page = (int) $this->params['items_per_page'];
-			$tested_per_page = ceil(((100 - $this->params['test_items_percent']) / 100) * $items_per_page);
-			$test_per_page = floor(($this->params['test_items_percent'] / 100) * $items_per_page);
+            $items_per_page = (int) $this->params['items_per_page'];
+            $tested_per_page = ceil(((100 - $this->params['test_items_percent']) / 100) * $items_per_page);
+            $test_per_page = floor(($this->params['test_items_percent'] / 100) * $items_per_page);
 
-				// Если ли вообще у нас на странице тестовые ролики.
-			if ($totalTestItems === 0 || $test_per_page === 0) {
-				$tested_per_page = $items_per_page;
-				$test_per_page = 0;
-			}
+                // Если ли вообще у нас на странице тестовые ролики.
+            if ($totalTestItems === 0 || $test_per_page === 0) {
+                $tested_per_page = $items_per_page;
+                $test_per_page = 0;
+            }
 
-				// Проверим, является ли текущая страница валидной.
-			$totalPages = ceil($this->totalItems / $items_per_page);
-			if ($this->page > $totalPages) {
-				throw new NotFoundHttpException();
-			}
+            if ($totalTestItems > 0 && $totalTestItems < $test_per_page) {
+                if ($this->page == 1) {
+                    $test_per_page = $totalTestItems;
+                    $tested_per_page = $items_per_page - $test_per_page;
+                } else {
+                    $test_per_page = 0;
+                    $tested_per_page = $items_per_page;
+                }
+            }
 
-	        	// Высчитаем смещение и получим завершившие тест тумбы
-	        $testedOffset = ($this->page - 1) * $tested_per_page;
-	        $testedItems = $this->getItems($tested_per_page, $testedOffset, $category->category_id, 1);
-	        $actuallyTestedImagesNumber = count($testedItems);
+                // Проверим, является ли текущая страница валидной.
+            $totalPages = ceil($this->totalItems / $items_per_page);
+            if ($this->page > $totalPages) {
+                throw new NotFoundHttpException();
+            }
 
-				// Если тестовые ролики есть, найдем их и запишем в массив видео.
-			if ($totalTestItems > 0 && $test_per_page > 0) {
-		        $testOffset = ($this->page - 1) * $test_per_page;
+                // Высчитаем смещение и получим завершившие тест тумбы
+            $testedOffset = ($this->page - 1) * $tested_per_page;
+            $testedItems = $this->getItems($tested_per_page, $testedOffset, $category->category_id, 1);
+            $actuallyTestedImagesNumber = count($testedItems);
 
-			    	// Если на странице нехватает завершивших тест, то доберем больше тестовых.
-			    if ($actuallyTestedImagesNumber < $tested_per_page) {
-						// если завершивших тест вообще нет, увеличим смещение тестовых.
-			        if ($actuallyTestedImagesNumber === 0 && $testOffset > 0) {
-			        	$a = floor($totalTestedItems / $tested_per_page);
-			        	$b = $totalTestedItems - ($tested_per_page * $a);
-			        	$testOffset += ($items_per_page - ($test_per_page + $b));
-			        }
+                // Если тестовые ролики есть, найдем их и запишем в массив видео.
+            if ($totalTestItems > 0 && $test_per_page > 0) {
+                $testOffset = ($this->page - 1) * $test_per_page;
 
-			        	// Доберем тестируемые.
-			        $test_per_page = $items_per_page - $actuallyTestedImagesNumber;
-			    }
+                    // Если на странице нехватает завершивших тест, то доберем больше тестовых.
+                if ($actuallyTestedImagesNumber < $tested_per_page) {
+                        // если завершивших тест вообще нет, увеличим смещение тестовых.
+                    if ($actuallyTestedImagesNumber === 0 && $testOffset > 0) {
+                        $a = floor($totalTestedItems / $tested_per_page);
+                        $b = $totalTestedItems - ($tested_per_page * $a);
+                        $testOffset += ($items_per_page - ($test_per_page + $b));
+                    }
 
-			    $testItems = $this->getItems($test_per_page, $testOffset, $category->category_id, 0);
+                        // Доберем тестируемые.
+                    $test_per_page = $items_per_page - $actuallyTestedImagesNumber;
+                }
 
-			    $videos = $testedItems + $testItems;
+                $testItems = $this->getItems($test_per_page, $testOffset, $category->category_id, 0);
 
-			} else {
-				$videos = $testedItems;
-			}
+                $testedNum = count($testedItems);
+                $testNum = count($testItems);
+
+                    // перемешаем тестовые и не тестовые местами
+                if (count($testedItems) >= 4 && $testNum > 0) {
+                    $videos = [];
+
+                    $totalItemsOnPage = $testedNum + $testNum;
+                        // Вычислим места, в которых будут стоять тестовые тумбы.
+                    $filledArray = range(0, $totalItemsOnPage - 1);
+                    array_splice($filledArray, 0, 5);
+                    $randKeys = (array) array_rand($filledArray, $testNum);
+                    $testPlacePositions = array_values(array_intersect_key($filledArray, array_flip($randKeys)));
+
+                    $testPlaceIterator = new \ArrayIterator($testPlacePositions);
+                    //$testPlaceIterator->rewind();
+                    /*$testIterator = new \ArrayIterator($testItems);
+                    $testedIterator = new \ArrayIterator($testedItems);
+
+                    for ($i = 0; $i < $totalItemsOnPage; $i++) {
+                        if ($i === $testPlaceIterator->current()) {
+                            //if ($testIterator->current() != false) {
+                                $videos[$testIterator->key()] = $testIterator->current();
+                            //}
+                            $testIterator->next();
+                            $testPlaceIterator->next();
+                        } else {
+                            //if ($testedIterator->current() != false) {
+                                $videos[$testedIterator->key()] = $testedIterator->current();
+                            //}
+                            $testedIterator->next();
+                        }
+                    }*/
 
 
-	    }
+                    for ($i = 0; $i < $totalItemsOnPage; $i++) {
+                        if ($i === $testPlaceIterator->current()) {
+                            $video = array_shift($testItems);
+
+                            $testPlaceIterator->next();
+                        } else {
+                            $video = array_shift($testedItems);
+                        }
+
+                        $videos[$video->image_id] = $video;
+                    }
+
+
+                } else {
+                    $videos = $testedItems + $testItems;
+                }
+
+            } else {
+                $videos = $testedItems;
+            }
+        }
 
         return $videos;
-	}
+    }
 
-	private function countTotalItems($category_id)
-	{
-		$count = VideosStats::find()
-			->joinWith('video')
-			->andWhere([
-	            'category_id' => $category_id,
-	            'best_image' => 1,
-	            'status' => 10,
-	        ])
-	        ->count();
+    private function countTotalItems($category_id)
+    {
+        $count = VideosStats::find()
+            ->joinWith('video')
+            ->andWhere([
+                'category_id' => $category_id,
+                'best_image' => 1,
+                'status' => 10,
+            ])
+            ->count();
 
         $this->totalItems = $count;
 
         return $count;
-	}
+    }
 
-	private function countItems($category_id, $tested = 1)
-	{
-		$count = VideosStats::find()
-			->joinWith('video')
-			->andWhere([
-	            'category_id' => $category_id,
-	            'best_image' => 1,
-				'tested_image' => $tested,
-	            'status' => 10,
-	        ])
-	        ->count();
+    private function countItems($category_id, $tested = 1)
+    {
+        $count = VideosStats::find()
+            ->joinWith('video')
+            ->andWhere([
+                'category_id' => $category_id,
+                'best_image' => 1,
+                'tested_image' => $tested,
+                'status' => 10,
+            ])
+            ->count();
 
         return (int) $count;
-	}
+    }
 
-	private function getItems($items_per_page, $offset, $category_id, $tested = null)
-	{
-		$videos = VideosStats::find()
-			->joinWith('video')
-			->with('image')
-			->with('categories')
-			->andWhere([
-	            'category_id' =>  $category_id,
-	            'best_image' => 1,
-	            'tested_image' => $tested,
-	            'status' => 10,
-	        ])
+    private function getItems($items_per_page, $offset, $category_id, $tested = null)
+    {
+        return VideosStats::find()
+            ->joinWith('video')
+            ->with('image')
+            ->with('categories')
+            ->andWhere([
+                'category_id' =>  $category_id,
+                'best_image' => 1,
+                'tested_image' => $tested,
+                'status' => 10,
+            ])
             ->limit($items_per_page)
             ->offset($offset)
             ->orderBy($this->getSort()->getOrders())
             ->indexBy('image_id')
             ->all();
-
-        return $videos;
-	}
-
-	private function getTestedImages($items_per_page, $category_id)
-	{
-		$query = VideosStats::find()
-			->joinWith('video')
-			->with('image')
-			->with('categories')
-			->andWhere([
-	            'category_id' =>  $category_id,
-	            'best_image' => 1,
-	            'tested_image' => 1,
-	            'status' => 10,
-	        ]);
-
-			// Постраничная выборка и сортировка
-        $offset = ($this->page - 1) * $items_per_page;
-
-        $videos = $query
-            ->limit($items_per_page)
-            ->offset($offset)
-            ->orderBy($this->getSort()->getOrders())
-            ->indexBy('image_id')
-            ->all();
-
-        return $videos;
-	}
-
-	private function getTestImages($items_per_page, $category_id)
-	{
-		$query = VideosStats::find()
-			->joinWith('video')
-			->with('image')
-			->with('categories')
-			->andWhere([
-	            'category_id' =>  $category_id,
-	            'best_image' => 1,
-	            'tested_image' => 0,
-	            'status' => 10,
-	        ]);
-
-			// Постраничная выборка и сортировка
-        $offset = ($this->page - 1) * $items_per_page;
-
-        $videos = $query
-            ->limit($items_per_page)
-            ->offset($offset)
-            ->orderBy($this->getSort()->getOrders())
-            ->indexBy('image_id')
-            ->all();
-
-        return $videos;
-	}
+    }
 
     /**
      * Creates data provider instance with search query applied
@@ -319,32 +326,32 @@ class VideosRepository extends \yii\base\Model
         return $dataProvider;
     }
 
-	public function getSort()
-	{
-		if (null === $this->sort) {
-			$this->sort = new Sort([
-		        'attributes' => [
-		            'popular' => [
-		                //'asc' => ['ctr' => SORT_ASC],
-		                'desc' => ['ctr' => SORT_DESC],
-		                'default' => SORT_DESC,
-		                'label' => 'popular',
-		            ],
-		            'new' => [
-		                'asc' => ['published_at' => SORT_DESC],
-		                //'desc' => ['published_at' => SORT_DESC],
-		                'default' => SORT_DESC,
-		                'label' => 'date',
-		            ],
-				],
-				'defaultOrder' => [
-					'popular' => SORT_DESC,
-				],
-		    ]);
-		}
+    public function getSort()
+    {
+        if (null === $this->sort) {
+            $this->sort = new Sort([
+                'attributes' => [
+                    'popular' => [
+                        //'asc' => ['ctr' => SORT_ASC],
+                        'desc' => ['ctr' => SORT_DESC],
+                        'default' => SORT_DESC,
+                        'label' => 'popular',
+                    ],
+                    'new' => [
+                        'asc' => ['published_at' => SORT_DESC],
+                        //'desc' => ['published_at' => SORT_DESC],
+                        'default' => SORT_DESC,
+                        'label' => 'date',
+                    ],
+                ],
+                'defaultOrder' => [
+                    'popular' => SORT_DESC,
+                ],
+            ]);
+        }
 
-		return $this->sort;
-	}
+        return $this->sort;
+    }
 
     /**
      * Возвращает количество постов последнего запроса.
@@ -353,14 +360,14 @@ class VideosRepository extends \yii\base\Model
      */
     public function getTotalItems()
     {
-    	if ($this->totalItems !== null)
-    		return (int) $this->totalItems;
-    	else
-    		return 0;
+        if ($this->totalItems !== null)
+            return (int) $this->totalItems;
+        else
+            return 0;
     }
 
     public function getParams()
     {
-    	return $this->params;
+        return $this->params;
     }
 }
