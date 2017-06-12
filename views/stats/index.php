@@ -13,11 +13,7 @@ $this->params['subtitle'] = 'Видео';
 $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->params['subtitle'];
 
-if ($data['total_rows'] > 0) {
-    $progress = round(($data['tested_rows'] / $data['total_rows'] * 100), 2);
-} else {
-    $progress = 0;
-}
+$progress = ($category_item['total_rows'] > 0) ? round(($data['tested_rows'] / $data['total_rows'] * 100), 2) : 0;
 
 ?>
 
@@ -63,7 +59,7 @@ if ($data['total_rows'] > 0) {
 							<?php if (!empty($data['categories'])): ?>
 								<?php foreach($data['categories'] as $category_item): ?>
 									<div class="progress-group">
-										<?php $progress = round(($category_item['tested_rows'] / $category_item['total_rows'] * 100), 2); ?>
+										<?php $progress = ($category_item['total_rows'] > 0) ? round(($category_item['tested_rows'] / $category_item['total_rows'] * 100), 2) : 0; ?>
 										<span class="progress-text"><?= $category_item['title'] ?></span>
 										<span class="progress-number"><b><?= $category_item['tested_rows'] ?></b>/<?= $category_item['total_rows'] ?> (<?= $progress ?>%)</span>
 
