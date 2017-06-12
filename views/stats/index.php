@@ -13,7 +13,11 @@ $this->params['subtitle'] = 'Видео';
 $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->params['subtitle'];
 
-$progress = round(($data['tested_rows'] / $data['total_rows'] * 100), 2);
+if ($data['total_rows'] > 0) {
+    $progress = round(($data['tested_rows'] / $data['total_rows'] * 100), 2);
+} else {
+    $progress = 0;
+}
 
 ?>
 
