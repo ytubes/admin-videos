@@ -1,7 +1,7 @@
-# admin-videos
+# Admin videos
 Модуль видео для админки
 
-## composer
+## Composer
 ```json
 "require": {
     "ytubes/admin-videos": "~0.1"
