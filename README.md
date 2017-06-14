@@ -4,7 +4,7 @@
 ## Composer
 ```json
 "require": {
-    "ytubes/admin-videos": "~0.1"
+    "ytubes/videos-admin": "~0.1"
 },
 ```
 
