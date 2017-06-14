@@ -1,5 +1,5 @@
 {
-    "name": "ytubes/admin-videos",
+    "name": "ytubes/videos-admin",
     "description": "Пакет для администрирования видео",
     "require": {
         "php": "^5.6 || ^7.0",
