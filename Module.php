@@ -7,7 +7,7 @@ use Yii;
 /**
  * videos module definition class
  */
-class Module extends \ytubes\components\Module
+class Module extends \backend\components\Module
 {
     /**
      * @inheritdoc
@@ -34,7 +34,7 @@ class Module extends \ytubes\components\Module
     {
         parent::init();
         // custom initialization code goes here
-        Yii::configure($this, require(__DIR__ . '/config.php'));
+        //Yii::configure($this, require(__DIR__ . '/config.php'));
     }
 
     public function getName()
