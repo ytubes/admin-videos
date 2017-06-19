@@ -13,16 +13,15 @@ use ytubes\admin\videos\models\VideosStats;
  */
 class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHandlerInterface
 {
-	private $db;
-	private $params;
-
 	private $errors = [];
+
+    /**
+     * @var int default recalculate ctr period (shows);
+     */
+	const RECALCULATE_CTR_PERIOD = 2000;
 
 	public function __construct($config = [])
 	{
-		$this->db = Yii::$app->db;
-		$this->params = Yii::$app->params['videos'];
-
 		parent::__construct($config);
 	}
 
@@ -38,7 +37,8 @@ class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHan
 	 */
     public function shiftCheckpoint()
     {
-		$showsCheckpointValue = (int) ceil($this->params['recalculate_ctr_period'] / 5);
+		$recalculate_ctr_period = (int) Yii::$app->getModule('videos')->settings->get('recalculate_ctr_period', self::RECALCULATE_CTR_PERIOD);
+		$showsCheckpointValue = (int) ceil($recalculate_ctr_period / 5);
 
         $thumbStats = VideosStats::find()
         	->where(['>=', 'current_shows', $showsCheckpointValue])
@@ -49,7 +49,7 @@ class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHan
 			return;
 		}
 
-		$transaction = $this->db->beginTransaction();
+		$transaction = VideosStats::getDb()->beginTransaction();
 		try {
 
 	        foreach ($thumbStats as $thumbStat) {
@@ -61,7 +61,7 @@ class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHan
 					$currentIndex ++;
 				}
 
-		   		$this->db->createCommand()
+		   		VideosStats::getDb()->createCommand()
 		    		->update(VideosStats::tableName(), [
 		    			'current_shows' => 0,
 		    			'current_clicks' => 0,

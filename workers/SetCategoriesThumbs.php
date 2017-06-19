@@ -15,16 +15,10 @@ use ytubes\admin\videos\models\repositories\VideosRepository;
  */
 class SetCategoriesThumbs extends \yii\base\Object //implements Task\Handler\TaskHandlerInterface
 {
-    private $db;
-    private $params;
-
     private $errors = [];
 
     public function __construct($config = [])
     {
-        $this->db = Yii::$app->db;
-        $this->params = Yii::$app->params['videos'];
-
         parent::__construct($config);
     }
 

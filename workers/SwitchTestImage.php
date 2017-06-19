@@ -13,16 +13,15 @@ use ytubes\admin\videos\models\VideosStats;
  */
 class SwitchTestImage extends \yii\base\Object //implements Task\Handler\TaskHandlerInterface
 {
-	private $db;
-	private $params;
-
 	private $errors = [];
+
+    /**
+     * @var int default test item period (test shows);
+     */
+    const TEST_ITEM_PERIOD = 200;
 
 	public function __construct($config = [])
 	{
-		$this->db = Yii::$app->db;
-		$this->params = Yii::$app->params['videos'];
-
 		parent::__construct($config);
 	}
 
@@ -41,7 +40,7 @@ class SwitchTestImage extends \yii\base\Object //implements Task\Handler\TaskHan
     		->update(VideosStats::tableName(), ['tested_image' => 1], '`tested_image`=0 AND `total_shows`>=:total_shows')
     		->bindValue(':total_shows', $this->params['test_item_period'])
    			->execute();*/
-		$test_item_period = isset($this->params['test_item_period']) ? (int) $this->params['test_item_period'] : 0;
+		$test_item_period = (int) Yii::$app->getModule('videos')->settings->get('test_item_period', self::TEST_ITEM_PERIOD);
 
 			// Завершим тестовый период у тумб, если набралась необходимая статистика.
         $rows = VideosStats::find()
@@ -55,11 +54,11 @@ class SwitchTestImage extends \yii\base\Object //implements Task\Handler\TaskHan
         	return;
         }
 
-		$transaction = $this->db->beginTransaction();
+		$transaction = VideosStats::getDb()->beginTransaction();
 
 		try {
 	        foreach ($rows as $row) {
-	        	$this->db->createCommand()
+	        	VideosStats::getDb()->createCommand()
 	        	->update(VideosStats::tableName(), ['tested_image' => 1], '`video_id`=:video_id AND `category_id`=:category_id AND `image_id`=:image_id')
 	        	->bindValue(':video_id', $row['video_id'])
 	        	->bindValue(':category_id', $row['category_id'])

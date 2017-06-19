@@ -22,7 +22,6 @@ class CategoriesRepository extends \yii\base\Model
 	private $totalItems;
 
 	private $sort;
-	protected $params;
 
 	protected $categoriesIndexedById;
 	protected $categoriesIndexedBySlug;
@@ -30,7 +29,6 @@ class CategoriesRepository extends \yii\base\Model
 
 	public function __construct($config = [])
 	{
-		$this->params = Yii::$app->params['videos'];
 		parent::__construct($config);
 	}
 

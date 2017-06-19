@@ -272,6 +272,13 @@ class VideosImport extends \yii\base\Model
 
 				foreach ($categories as $category) {
 					foreach ($screenshots as $sKey => $screenshot) {
+						$videoStats = VideosStats::find()
+							->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
+							->one();
+
+						if ($videoStats instanceof VideosStats)
+							continue;
+
 						$videoStats = new VideosStats();
 
 						$videoStats->video_id = $video->video_id;
@@ -341,10 +348,10 @@ class VideosImport extends \yii\base\Model
 	}
 
 	/**
-	 *	Генерирует slug исходя из title. Также присоединяет численный суффикс, если слаг не уникален.
+	 * Генерирует slug исходя из title. Также присоединяет численный суффикс, если слаг не уникален.
 	 *
-	 *	@param string $title
-	 *	@return string
+	 * @param string $title
+	 * @return string
 	 */
 	private function generateSlug($title)
 	{
@@ -362,16 +369,16 @@ class VideosImport extends \yii\base\Model
 	}
 
 	/**
-	 *	Проверяет является ли slug уникальным. Верент true, если уникален.
+	 * Проверяет является ли slug уникальным. Верент true, если уникален.
 	 *
-	 *	@param string $slug
-	 *	@return bool
+	 * @param string $slug
+	 * @return bool
 	 */
 	private function checkUniqueSlug($slug)
 	{
 		$sql = "SELECT `video_id` FROM `" . Videos::tableName() . "` WHERE `slug`='{$slug}'";
 
-		$id = Yii::$app->db->createCommand($sql)
+		$id = Videos::getDb()->createCommand($sql)
            ->queryOne();
 
 		return false === $id;

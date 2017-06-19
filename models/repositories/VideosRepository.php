@@ -10,14 +10,12 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\data\Sort;
 
-
-
 use ytubes\admin\videos\models\Videos;
 use ytubes\admin\videos\models\VideosStats;
 use ytubes\admin\videos\models\VideosCategories;
 
 /**
- * VideosRepository represents the model behind the search form about `frontend\models\videos\Videos`.
+ * VideosRepository represents the model behind the search form about `ytubes\admin\videos\models\Videos`.
  */
 class VideosRepository extends Model
 {
@@ -27,11 +25,18 @@ class VideosRepository extends Model
     private $totalItems;
 
     private $sort;
-    protected $params;
+
+    /**
+     * @var int default items per page
+     */
+    const ITEMS_PER_PAGE = 20;
+    /**
+     * @var int default test items percentage (on page);
+     */
+    const TEST_ITEMS_PERCENT = 0;
 
     public function __construct($config = [])
     {
-        $this->params = Yii::$app->params['videos'];
         parent::__construct($config);
     }
 
@@ -82,7 +87,7 @@ class VideosRepository extends Model
         $counter = clone $videosSearch;
         $this->totalItems = $counter->count();
 
-        $items_per_page = (int) $this->params['items_per_page'];
+        $items_per_page = (int) Yii::$app->getModule('videos')->settings->get('items_per_page', self::ITEMS_PER_PAGE);
         $offset = ($this->page - 1 ) * $items_per_page;
 
         $videos = $videosSearch->orderBy(['published_at' => SORT_DESC])
@@ -113,9 +118,10 @@ class VideosRepository extends Model
 
         if ($this->totalItems > 0) {
 
-            $items_per_page = (int) $this->params['items_per_page'];
-            $tested_per_page = ceil(((100 - $this->params['test_items_percent']) / 100) * $items_per_page);
-            $test_per_page = floor(($this->params['test_items_percent'] / 100) * $items_per_page);
+            $items_per_page = (int) Yii::$app->getModule('videos')->settings->get('items_per_page', self::ITEMS_PER_PAGE);
+            $test_item_percent = (int) Yii::$app->getModule('videos')->settings->get('test_items_percent', self::TEST_ITEMS_PERCENT);
+            $tested_per_page = ceil(((100 - $test_item_percent) / 100) * $items_per_page);
+            $test_per_page = floor(($test_item_percent / 100) * $items_per_page);
 
                 // Если ли вообще у нас на странице тестовые ролики.
             if ($totalTestItems === 0 || $test_per_page === 0) {

@@ -7,7 +7,7 @@ use Yii;
 /**
  * videos module definition class
  */
-class Module extends \backend\components\Module
+class Module extends \ytubes\components\Module
 {
     /**
      * @inheritdoc

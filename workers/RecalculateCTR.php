@@ -13,16 +13,10 @@ use ytubes\admin\videos\models\VideosStats;
  */
 class RecalculateCTR extends \yii\base\Object //implements Task\Handler\TaskHandlerInterface
 {
-	protected $db;
-	protected $params;
-
 	protected $errors = [];
 
 	public function __construct($config = [])
 	{
-		$this->db = Yii::$app->db;
-		$this->params = Yii::$app->params['videos'];
-
 		parent::__construct($config);
 	}
 
@@ -34,14 +28,14 @@ class RecalculateCTR extends \yii\base\Object //implements Task\Handler\TaskHand
 	protected function recalculateCtr()
 	{
     		// Обновим total_shows и total_clicks на актуальный.
-   		$this->db->createCommand()
+   		VideosStats::getDb()->createCommand()
     		->update(VideosStats::tableName(), [
     				'total_shows' => new Expression('current_shows+shows0+shows1+shows2+shows3+shows4'),
     				'total_clicks' => new Expression('current_clicks+clicks0+clicks1+clicks2+clicks3+clicks4'),
     			])
    			->execute();
 
-   		$this->db->createCommand()
+   		VideosStats::getDb()->createCommand()
     		->update(VideosStats::tableName(), ['ctr' => new Expression('total_clicks / total_shows')])
    			->execute();
 

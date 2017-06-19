@@ -61,7 +61,7 @@ class Tools extends \yii\base\Model
 	public function clearStats()
 	{
 			// Очистка статистики тумб
-		$q1 = Yii::$app->db->createCommand()
+		$q1 = Videos::getDb()->createCommand()
 			->update(VideosStats::tableName(), [
 					'tested_image' => 0,
 					'current_index' => 0,
@@ -84,7 +84,7 @@ class Tools extends \yii\base\Model
 			->execute();
 
 			// Очитска просмотров, лайков, дизлайков.
-		$q2 = Yii::$app->db->createCommand()
+		$q2 = Videos::getDb()->createCommand()
 			->update(Videos::tableName(), [
 					'likes' => 0,
 					'dislikes' => 0,
@@ -93,7 +93,7 @@ class Tools extends \yii\base\Model
 			->execute();
 
 			// Очитска просмотров, лайков, дизлайков.
-		$q3 = Yii::$app->db->createCommand()
+		$q3 = Videos::getDb()->createCommand()
 			->update(VideosCategories::tableName(), [
 					'shows' => 0,
 					'clicks' => 0,
@@ -113,7 +113,7 @@ class Tools extends \yii\base\Model
 	public function randomDate()
 	{
 			// Рандом для видео в таблице `videos`
-		$q1 = Yii::$app->db->createCommand()
+		$q1 = Videos::getDb()->createCommand()
 			->update(Videos::tableName(), [
 					'published_at' => new Expression('FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()) - FLOOR(0 + (RAND() * 31536000)))'),
 				])
@@ -127,7 +127,7 @@ class Tools extends \yii\base\Model
 				ON `v`.`video_id`=`vs`.`video_id`
 			SET `vs`.`published_at`=`v`.`published_at`';
 
-		$q2 = Yii::$app->db->createCommand($sql)
+		$q2 = Videos::getDb()->createCommand($sql)
 			->execute();
 
 		$result = $q1 + $q2;
@@ -142,33 +142,33 @@ class Tools extends \yii\base\Model
 	public function clearVideos()
 	{
 			// Очищаем стату тумб
-		Yii::$app->db->createCommand()
+		Videos::getDb()->createCommand()
 			->truncateTable(VideosStats::tableName())
 			->execute();
 
 			// Удаляем фотки
-		Yii::$app->db->createCommand()
+		Videos::getDb()->createCommand()
 			->delete(VideosImages::tableName(), '1=1')
 			->execute();
 
 			// Удаляем видео
-		Yii::$app->db->createCommand()
+		Videos::getDb()->createCommand()
 			->delete(Videos::tableName(), '1=1')
 			->execute();
 
 			// Очищаем релатеды.
-		Yii::$app->db->createCommand()
+		Videos::getDb()->createCommand()
 			->truncateTable(VideosRelatedMap::tableName())
 			->execute();
 
 			// Сброс автоинкремента у видео
 		$sql = 'ALTER TABLE `' . Videos::tableName() . '` AUTO_INCREMENT=1';
-		Yii::$app->db->createCommand($sql)
+		Videos::getDb()->createCommand($sql)
 			->execute();
 
 			// Сброс автоинкремента у скриншотов
 		$sql = 'ALTER TABLE `' . VideosImages::tableName() . '` AUTO_INCREMENT=1';
-		Yii::$app->db->createCommand($sql)
+		Videos::getDb()->createCommand($sql)
 			->execute();
 
 		return true;

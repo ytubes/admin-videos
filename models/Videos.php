@@ -126,7 +126,7 @@ class Videos extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Videos::className(), ['video_id' => 'related_id'])
 		        	->viaTable(VideosRelatedMap::tableName(), ['video_id' => 'video_id'], function ($query) {
-			            $relatedLimit = Yii::$app->params['videos']['related_number'];
+			            $relatedLimit = (int) Yii::$app->getModule('videos')->settings->get('related_number', 12);
 			            /* @var $query \yii\db\ActiveQuery */
 
 			            $query->limit($relatedLimit);
