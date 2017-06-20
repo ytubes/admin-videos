@@ -11,7 +11,7 @@ use ytubes\admin\videos\models\VideosImages;
 use ytubes\admin\videos\models\repositories\VideosRepository;
 
 /**
- * RecalculateCTR represents the model behind the search form about `frontend\models\videos\Videos`.
+ * RecalculateCTR represents the model behind the search form about `ytubes\admin\videos\models\Videos`.
  */
 class SetCategoriesThumbs extends \yii\base\Object //implements Task\Handler\TaskHandlerInterface
 {
