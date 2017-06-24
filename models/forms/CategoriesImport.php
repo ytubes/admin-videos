@@ -27,25 +27,34 @@ class CategoriesImport extends \yii\base\Model
     public $csv_rows;
     public $csv_file;
 
-    public $replace;
+    public $update_category;
 
     protected $model;
 
     protected $options = [
-    	['value' => 'skip', 'text' => 'Пропустить'],
-    	['value' => 'category_id', 'text'  => 'id'],
-    	['value' => 'title', 'text'  => 'Название'],
-    	['value' => 'slug', 'text'  => 'Слаг'],
-    	['value' => 'meta_title', 'text'  => 'Мета заголовок'],
-    	['value' => 'meta_description', 'text'  => 'Мета описание'],
-    	['value' => 'h1', 'text'  => 'Заголовок H1'],
-    	['value' => 'description', 'text'  => 'Описание'],
-    	['value' => 'seotext', 'text'  => 'СЕО текст'],
-    	['value' => 'param1', 'text'  => 'Доп. поле 1'],
-    	['value' => 'param2', 'text'  => 'Доп. поле 2'],
-    	['value' => 'param3', 'text'  => 'Доп. поле 3'],
+    	'skip' => 'Пропустить',
+    	'category_id' => 'id',
+    	'title' => 'Название',
+    	'slug' => 'Слаг',
+    	'meta_title' => 'Мета заголовок',
+    	'meta_description' => 'Мета описание',
+    	'h1' => 'Заголовок H1',
+    	'description' => 'Описание',
+    	'seotext' => 'СЕО текст',
+    	'param1' => 'Доп. поле 1',
+    	'param2' => 'Доп. поле 2',
+    	'param3' => 'Доп. поле 3',
     ];
 
+	public function __construct($config = [])
+	{
+		parent::__construct($config);
+
+		$this->delimiter = '|';
+		$this->enclosure = '"';
+		$this->fields = ['skip'];
+		$this->update_category = false;
+	}
 
     /**
      * @inheritdoc
@@ -57,8 +66,8 @@ class CategoriesImport extends \yii\base\Model
             ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
             [['delimiter', 'enclosure', 'csv_rows'], 'filter', 'filter' => 'trim'],
             [['delimiter', 'enclosure', 'csv_rows'], 'string'],
-            [['replace'], 'boolean'],
-            ['replace', 'default', 'value' => false],
+            [['update_category'], 'boolean'],
+            ['update_category', 'default', 'value' => false],
 
             [['csv_file'], 'file', 'checkExtensionByMimeType' => false, 'skipOnEmpty' => true, 'extensions' => 'csv', 'maxFiles' => 1, 'mimeTypes' => 'text/plain'],
         ];
@@ -157,14 +166,14 @@ class CategoriesImport extends \yii\base\Model
 			$category = new VideosCategories();
 		} else {
 				// Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
-			if ($this->replace == false) {
+			if ($this->update_category == false) {
 				return true;
 			}
 		}
 
 		$category->attributes = $newCategory;
 
-		if (!isset($newCategory['slug']) || empty($newCategory['slug'])) {
+		if (empty($newCategory['slug']) || $newCategory['slug'] === '') {
 			$category->slug = \URLify::filter($newCategory['title']);
 		}
 

@@ -17,6 +17,7 @@ use ytubes\admin\videos\models\Videos;
 use ytubes\admin\videos\models\VideosCategories;
 use ytubes\admin\videos\models\VideosImages;
 use ytubes\admin\videos\models\VideosStats;
+use ytubes\admin\videos\models\ImportFeed;
 
 /**
  * Пометка: Сделать проверку на соответствие полей. Если не соответствует - писать в лог.
@@ -34,32 +35,54 @@ class VideosImport extends \yii\base\Model
     public $csv_rows;
     public $csv_file;
 
+    /**
+     * @var boolean $skip_new_categories пропускать создание новых видео, если исходный урл уже есть
+     */
     public $skip_duplicate_urls;
+    /**
+     * @var boolean $skip_new_categories пропускать создание новых видео, если emebd код такой уже есть
+     */
     public $skip_duplicate_embeds;
-
+    /**
+     * @var boolean $skip_new_categories пропускать создание новых категорий
+     */
     public $skip_new_categories;
+    /**
+     * @var boolean $external_images будут использоваться внешние тумбы или скачиваться и нарезаться на сервере.
+     */
+	public $external_images; // Добавить в базу тумб флаг "внешняя".
+    /**
+     * @var string $template шаблон вывода вставленного видео.
+     */
+	public $template;
+
+	public $imported_rows_num = 0;
 
     protected $categories;
 
-    protected $options = [
-    	['value' => 'skip', 'text' => 'Пропустить'],
-    	['value' => 'video_id', 'text'  => 'ID видео'],
-    	['value' => 'title', 'text'  => 'Название'],
-    	['value' => 'slug', 'text'  => 'Слаг'],
-    	['value' => 'description', 'text'  => 'Описание'],
-    	['value' => 'short_description', 'text'  => 'Короткое описание'],
-    	['value' => 'duration', 'text'  => 'Длительность'],
-    	['value' => 'video_url', 'text'  => 'URL видео'],
-    	['value' => 'source_url', 'text'  => 'URL источника'],
-    	['value' => 'embed', 'text'  => 'Embed код'],
-    	['value' => 'likes', 'text'  => 'Лайки'],
-    	['value' => 'dislikes', 'text'  => 'Дизлайки'],
-    	['value' => 'views', 'text'  => 'Просмотры'],
-    	['value' => 'published_at', 'text'  => 'Дата публикации'],
-    	['value' => 'categories', 'text'  => 'Категории'],
-    	['value' => 'images', 'text'  => 'Скриншоты'],
-    ];
+    /**
+     * @var array $option опции для тега select, отвечающего за набор полей csv
+     */
+    protected $options;
 
+    protected $preset_options;
+
+	public function __construct(ImportFeed $importFeed, $config = [])
+	{
+		parent::__construct($config);
+
+		$this->attributes = $importFeed->getAttributes();
+		$this->options = $importFeed->getFieldsOptions();
+
+		$presets = $importFeed->find()
+			->select(['feed_id', 'name'])
+			->asArray()
+			->all();
+
+		$options = array_column($presets, 'name', 'feed_id');
+		$this->preset_options = [0 => 'Default'] + $options;
+
+	}
 
     /**
      * @inheritdoc
@@ -71,8 +94,8 @@ class VideosImport extends \yii\base\Model
             ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
             [['delimiter', 'enclosure', 'csv_rows'], 'filter', 'filter' => 'trim'],
             [['delimiter', 'enclosure', 'csv_rows'], 'string'],
-            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories'], 'boolean'],
-            //['replace', 'default', 'value' => false],
+            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images'], 'boolean'],
+            [['template'], 'string', 'max' => 64],
 
             [['csv_file'], 'file', 'checkExtensionByMimeType' => false, 'skipOnEmpty' => true, 'extensions' => 'csv', 'maxFiles' => 1, 'mimeTypes' => 'text/plain'],
         ];
@@ -85,9 +108,15 @@ class VideosImport extends \yii\base\Model
 	public function save()
 	{
 		$this->csv_file = UploadedFile::getInstanceByName('csv_file');
-		$this->categories = VideosCategories::find()
-			->indexBy('title')
-			->all();
+		if (in_array('categories_ids', $this->fields)) {
+			$this->categories = VideosCategories::find()
+				->indexBy('category_id')
+				->all();
+		} else {
+			$this->categories = VideosCategories::find()
+				->indexBy('title')
+				->all();
+		}
 
 		if ($this->validate()) {
 
@@ -113,7 +142,9 @@ class VideosImport extends \yii\base\Model
 						continue;
 					}
 
-					$this->insertVideo($newVideo);
+					if ($this->insertVideo($newVideo)) {
+						$this->imported_rows_num ++;
+					}
 				}
 
 				@unlink($filepath);
@@ -139,7 +170,9 @@ class VideosImport extends \yii\base\Model
 						continue;
 					}
 
-					$this->insertVideo($newVideo);
+					if ($this->insertVideo($newVideo)) {
+						$this->imported_rows_num ++;
+					}
 				}
 			}
 
@@ -150,7 +183,8 @@ class VideosImport extends \yii\base\Model
 	}
 
 	/**
-	 * Осуществляет вставку видео. Если видео уже существут в базе (проверяется по source_url и embed). То вставка просто игнорируется.
+	 * Осуществляет вставку видео. Если видео уже существут в базе (проверяется по source_url и embed), то вставка просто игнорируется.
+	 * @param array $newVideo массив с данными для вставки нового видео.
 	 * @return boolean была ли произведена вставка
 	 */
 	protected function insertVideo($newVideo)
@@ -162,18 +196,20 @@ class VideosImport extends \yii\base\Model
 				->one();
 
 			if ($video instanceof Videos) {
-				return true;
+				$this->addError('csv_rows', "{$newVideo['video_id']} дубликат идентификатора");
+				return false;
 			}
 		}
 
 			// Ищем, существует ли видео по урлу источника.
-		if ($this->skip_duplicate_urls == 1 && isset($newVideo['source_url'])) {
+		if ($this->skip_duplicate_urls == 1 && isset($newVideo['source_url']) && $newVideo['source_url'] !== '') {
 			$video = Videos::find()
 				->where(['source_url' => $newVideo['source_url']])
 				->one();
 
 			if ($video instanceof Videos) {
-				return true;
+				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат урла источника");
+				return false;
 			}
 		}
 
@@ -184,7 +220,8 @@ class VideosImport extends \yii\base\Model
 				->one();
 
 			if ($video instanceof Videos) {
-				return true;
+				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат embed кода");
+				return false;
 			}
 		}
 
@@ -193,13 +230,19 @@ class VideosImport extends \yii\base\Model
 
 			// Если у видео есть категории, вынесем их в отдельный массив.
 		$videoCategories = [];
-		if (isset($newVideo['categories'])) {
+		if (isset($newVideo['categories_ids']) && $newVideo['categories_ids'] !== '') {
+			$videoCategories = explode(',', $newVideo['categories_ids']);
+			unset($newVideo['categories_ids']);
+
+			// Или категории по названиям.
+		} elseif (isset($newVideo['categories']) && $newVideo['categories'] !== '') {
 			$videoCategories = explode(',', $newVideo['categories']);
 			unset($newVideo['categories']);
 		}
+
 			// Если у видео есть скриншоты, вынесем их в отдельный массив.
 		$videoScreenshots = [];
-		if (isset($newVideo['images'])) {
+		if (isset($newVideo['images']) && $newVideo['images'] !== '') {
 			$videoScreenshots = explode(',', $newVideo['images']);
 			unset($newVideo['images']);
 		}
@@ -207,7 +250,7 @@ class VideosImport extends \yii\base\Model
 
 		$video->attributes = $newVideo;
 
-		if (!isset($newVideo['slug']) || empty($newVideo['slug'])) {
+		if (empty($newVideo['slug']) || $newVideo['slug'] === '') {
 			//$video->slug = URLify::filter($newVideo['title']);
 			$slug = \URLify::filter($newVideo['title']);
 		} else {
@@ -219,86 +262,95 @@ class VideosImport extends \yii\base\Model
 		$video->updated_at = gmdate('Y:m:d H:i:s');
 		$video->created_at = gmdate('Y:m:d H:i:s');
 
-		if ($video->save(true)) {
+		if (!$video->save(true)) {
+			$this->addError('csv_rows', "{$newVideo['title']} не сохранился, возможно фейл с параметрами");
+			return false;
+		}
 
-			$categories = [];
-			if (!(empty($videoCategories))) {
+		$categories = [];
+		if (!(empty($videoCategories))) {
 
-				foreach ($videoCategories as $videoCategory) {
-					$categoryTitle = trim(strip_tags($videoCategory));
-						// Если категории не существует и флажок "не создавать новые" выключен, добавим категорию.
-					if (!isset($this->categories[$categoryTitle]) && $this->skip_new_categories == false) {
-						$category = new VideosCategories();
+			foreach ($videoCategories as $videoCategory) {
+				$categoryTitle = trim(strip_tags($videoCategory));
+					// Если категории не существует и флажок "не создавать новые" выключен, добавим категорию.
+				if (!isset($this->categories[$categoryTitle]) && $this->skip_new_categories == false) {
+					$category = new VideosCategories();
 
-						$category->title = $categoryTitle;
-						$category->slug = \URLify::filter($categoryTitle);
-						$category->meta_title = $categoryTitle;
-						$category->h1 = $categoryTitle;
-						$category->updated_at = gmdate('Y:m:d H:i:s');
-						$category->created_at = gmdate('Y:m:d H:i:s');
-						$category->save();
+					$category->title = $categoryTitle;
+					$category->slug = \URLify::filter($categoryTitle);
+					$category->meta_title = $categoryTitle;
+					$category->h1 = $categoryTitle;
+					$category->updated_at = gmdate('Y:m:d H:i:s');
+					$category->created_at = gmdate('Y:m:d H:i:s');
+					$category->save();
 
-						$this->categories[$categoryTitle] = $category;
-					}
+					$this->categories[$categoryTitle] = $category;
+				}
 
-					if (isset($this->categories[$categoryTitle])) {
-						$categories[] = $this->categories[$categoryTitle];
-					}
+				if (isset($this->categories[$categoryTitle])) {
+					$categories[] = $this->categories[$categoryTitle];
 				}
 			}
+		}
 
-			$screenshots = [];
-			if (!(empty($videoScreenshots))) {
+		$screenshots = [];
+		if (!(empty($videoScreenshots))) {
 
-				foreach ($videoScreenshots as $key => $videoScreenshot) {
-					$screenshot = new VideosImages();
+			foreach ($videoScreenshots as $key => $videoScreenshot) {
+				$screenshot = new VideosImages();
 
-					$screenshot->video_id = $video->video_id;
-					$screenshot->position = $key;
-					$screenshot->source_url = trim($videoScreenshot);
+				$screenshot->video_id = $video->video_id;
+				$screenshot->position = $key;
+				$screenshot->source_url = trim($videoScreenshot);
+				$screenshot->created_at = gmdate('Y:m:d H:i:s');
+
+				if ($this->external_images == 1) {
+					$screenshot->status = 10;
+					$screenshot->filepath = trim($videoScreenshot);
+				} else {
 					$screenshot->status = 0;
-					$screenshot->created_at = gmdate('Y:m:d H:i:s');
+				}
 
-					if ($screenshot->save(true)) {
-						$screenshots[] = $screenshot;
-						if ($key === 0) {
-							$video->link('image', $screenshot);
-						}
+				if ($screenshot->save(true)) {
+					$screenshots[] = $screenshot;
+					if ($key === 0) {
+						$video->link('image', $screenshot);
 					}
 				}
 			}
+		}
 
-			if (!empty($categories) && !empty($screenshots)) {
+		if (!empty($categories) && !empty($screenshots)) {
 
-				foreach ($categories as $category) {
-					foreach ($screenshots as $sKey => $screenshot) {
-						$videoStats = VideosStats::find()
-							->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
-							->one();
+			foreach ($categories as $category) {
+				foreach ($screenshots as $sKey => $screenshot) {
+					$videoStats = VideosStats::find()
+						->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
+						->one();
 
-						if ($videoStats instanceof VideosStats)
-							continue;
+					if ($videoStats instanceof VideosStats)
+						continue;
 
-						$videoStats = new VideosStats();
+					$videoStats = new VideosStats();
 
-						$videoStats->video_id = $video->video_id;
-						$videoStats->category_id = $category->category_id;
-						$videoStats->image_id = $screenshot->image_id;
-						$videoStats->published_at = $video->published_at;
-						$videoStats->duration = (int) $video->duration;
+					$videoStats->video_id = $video->video_id;
+					$videoStats->category_id = $category->category_id;
+					$videoStats->image_id = $screenshot->image_id;
+					$videoStats->published_at = $video->published_at;
+					$videoStats->duration = (int) $video->duration;
 
-						if ($sKey === 0) {
-							$videoStats->best_image = 1;
-						}
-
-						$videoStats->save();
+					if ($sKey === 0) {
+						$videoStats->best_image = 1;
 					}
+
+					$videoStats->save();
 				}
 			}
-
 		}
 
 		unset($screenshots, $categories);
+
+		return true;
 	}
 
 	/**
@@ -390,5 +442,13 @@ class VideosImport extends \yii\base\Model
 	public function getOptions()
 	{
 		return $this->options;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getPresetOptions()
+	{
+		return $this->preset_options;
 	}
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace ytubes\admin\videos\models;
 
 use Yii;
@@ -23,6 +22,7 @@ use Yii;
  * @property integer $dislikes
  * @property integer $comments_count
  * @property integer $views
+ * @property string $template
  * @property integer $status
  * @property string $published_at
  * @property string $created_at
@@ -55,7 +55,7 @@ class Videos extends \yii\db\ActiveRecord
             [['image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_count', 'views', 'status'], 'integer'],
             [['description'], 'string'],
             [['published_at', 'created_at', 'updated_at'], 'safe'],
-            [['short_description', 'video_url', 'source_url', 'embed'], 'string', 'max' => 255],
+            [['short_description', 'video_url', 'source_url', 'embed', 'template'], 'string', 'max' => 255],
         ];
     }
 
@@ -82,6 +82,7 @@ class Videos extends \yii\db\ActiveRecord
             'dislikes' => 'Dislikes',
             'comments_count' => 'Comments Count',
             'views' => 'Views',
+            'template' => 'Template',
             'status' => 'Status',
             'published_at' => 'Published At',
             'created_at' => 'Created At',

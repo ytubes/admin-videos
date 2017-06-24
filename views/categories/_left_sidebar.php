@@ -10,7 +10,7 @@ use yii\helpers\Html;
 		<i class="fa fa-list"></i><h3 class="box-title">Категории</h3>
 		<div class="box-tools pull-right">
 			<div class="btn-group">
-				<?= Html::a('<i class="glyphicon glyphicon-import" style="color:#ad00ff;"></i>', ['import'], ['class' => 'btn btn-default btn-sm', 'title' => 'Импорт категорий']) ?>
+				<?= Html::a('<i class="glyphicon glyphicon-import" style="color:#ad00ff;"></i>', ['import/categories'], ['class' => 'btn btn-default btn-sm', 'title' => 'Импорт категорий']) ?>
 				<?= Html::a('<i class="glyphicon glyphicon-export" style="color:#ff196a"></i>', ['export'], ['class' => 'btn btn-default btn-sm', 'title' => 'Экспорт категорий']) ?>
 			</div>
 		</div>

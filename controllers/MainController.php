@@ -124,23 +124,6 @@ class MainController extends \yii\web\Controller
     }
 
     /**
-     * Импорт роликов через файл или текстовую форму
-     * @return mixed
-     */
-    public function actionImport()
-    {
-        $model = new VideosImport();
-
-        if ($model->load([$model->formName() => Yii::$app->request->post()]) && $model->save()) {
-            Yii::warning('imported');
-        }
-
-        return $this->render('import', [
-        	'model' => $model,
-        ]);
-    }
-
-    /**
      * Finds the Videos model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
