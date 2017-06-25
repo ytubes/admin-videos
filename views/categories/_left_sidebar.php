@@ -10,8 +10,15 @@ use yii\helpers\Html;
 		<i class="fa fa-list"></i><h3 class="box-title">Категории</h3>
 		<div class="box-tools pull-right">
 			<div class="btn-group">
-				<?= Html::a('<i class="glyphicon glyphicon-import" style="color:#ad00ff;"></i>', ['import/categories'], ['class' => 'btn btn-default btn-sm', 'title' => 'Импорт категорий']) ?>
-				<?= Html::a('<i class="glyphicon glyphicon-export" style="color:#ff196a"></i>', ['export'], ['class' => 'btn btn-default btn-sm', 'title' => 'Экспорт категорий']) ?>
+				Сортировка: <?= Html::dropDownList('sort_items', 'position', [
+					'key' => 'ID',
+					'position' => 'Ручная',
+					'title' => 'Название',
+					'ctr' => 'CTR',
+				], [
+					'id' => 'sort-items',
+					'class' => 'btn-default btn-sm',
+				]) ?>
 			</div>
 		</div>
     </div>
@@ -21,7 +28,7 @@ use yii\helpers\Html;
     		<ul id="sortable" class="categories-list">
     		<?php foreach ($categories as $category): ?>
 
-				<li class="categories-list__item <?= ($category->category_id === $active_id)? 'active' : ''?>" data-key="<?= $category->category_id ?>">
+				<li class="categories-list__item <?= ($category->category_id === $active_id)? 'active' : ''?>" data-key="<?= $category->category_id ?>" data-position="<?= $category->position ?>" data-title="<?= $category->title ?>" data-ctr="<?= $category->ctr ?>">
 					<span class="categories-list__span categories-list__span--id"><?= $category->category_id ?>: </span><?= Html::a($category->title, ['update', 'id' => $category->category_id], ['title' => 'Редактирование', 'class' => 'categories-list__a categories-list__a--title']) ?>
 					<ul class="categories-list__actions action-buttons pull-right">
 						<li class="action-buttons__item">
@@ -67,6 +74,7 @@ use yii\helpers\Html;
 				]
 			) ?>
 		</div>
+				<?= Html::a('<i class="glyphicon glyphicon-export" style="color:#ff196a"></i> Экспорт категорий', ['export'], ['class' => 'btn btn-default', 'title' => 'Экспорт категорий']) ?>
 	</div>
 </div>
 
@@ -104,6 +112,14 @@ $('#save-order').on('click', function () {
 	request.fail(function( jqXHR, textStatus ) {
 		toastr.warning('Request failed: ' + textStatus);
 	});
+});
+
+$('#sort-items').on('change', function () {
+	$("#sortable .categories-list__item").sort(sort_li).appendTo('#sortable');
+
+	function sort_li(a, b) {
+		return ($(b).data($('#sort-items').val())) < ($(a).data($('#sort-items').val())) ? 1 : -1;
+	}
 });
 JAVASCRIPT;
 

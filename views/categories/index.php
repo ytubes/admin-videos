@@ -29,7 +29,12 @@ $this->params['breadcrumbs'][] = $this->title;
 		<div class="col-md-8">
 			<div class="box box-success">
 				<div class="box-header with-border">
-					<i class="fa  fa-file-o"></i><h3 class="box-title">Добавить новую категорию</h3>
+					<i class="fa fa-file-o"></i><h3 class="box-title">Добавить новую категорию</h3>
+					<div class="box-tools pull-right">
+						<div class="btn-group">
+							<?= Html::a('<i class="glyphicon glyphicon-import" style="color:#ad00ff;"></i>', ['import/categories'], ['class' => 'btn btn-default btn-sm', 'title' => 'Импорт категорий']) ?>
+						</div>
+					</div>
 	            </div>
 
 				<?php $form = ActiveForm::begin([
@@ -78,42 +83,3 @@ $this->params['breadcrumbs'][] = $this->title;
 		</div>
 	</div>
 </section>
-
-<?php
-
-$script = <<< 'JAVASCRIPT'
-$("#sortable").sortable({
-  placeholder: 'categories-list__placeholder',
-  cursor: 'move',
-});
-
-$('#save-order').on('click', function () {
-	var requestUrl = $(this).data('save');
-    var order = $('#sortable').sortable('serialize', {
-        attribute: 'data-key',
-        key: 'order[]',
-        expression: /(.+)/
-    });
-
-	var request = $.ajax({
-		url: requestUrl,
-		method: 'POST',
-		data: order,
-		dataType: "json"
-	});
-
-	request.done(function(response) {
-		if (response.status === 'success') {
-			toastr.success(response.message);
-		} else if (response.status === 'error') {
-			toastr.error(response.message);
-		}
-	});
-
-	request.fail(function( jqXHR, textStatus ) {
-		toastr.warning('Request failed: ' + textStatus);
-	});
-});
-JAVASCRIPT;
-
-$this->registerJS($script);

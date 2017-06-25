@@ -33,6 +33,7 @@ $this->params['breadcrumbs'][] = 'Редактирование';
 					<i class="fa fa-edit"></i><h3 class="box-title">Редактирование: <?= $model->title ?></h3>
 					<div class="box-tools pull-right">
 						<div class="btn-group">
+							<?= Html::a('<i class="glyphicon glyphicon-import" style="color:#ad00ff;"></i>', ['import/categories'], ['class' => 'btn btn-default btn-sm', 'title' => 'Импорт категорий']) ?>
 							<?= Html::a('<i class="fa fa-plus" style="color:green;"></i>', ['index'], ['class' => 'btn btn-default btn-sm', 'title' => 'Добавить категорию']) ?>
 							<?= Html::a('<i class="fa fa-info-circle" style="color:#337ab7;"></i>', ['view', 'id' => $model->category_id], ['class' => 'btn btn-default btn-sm', 'title' => 'Информация о категории']) ?>
 							<?= Html::a('<i class="fa fa-trash-o" style="color:brown;"></i>', ['delete', 'id' => $model->category_id], [

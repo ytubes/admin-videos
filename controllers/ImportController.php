@@ -101,7 +101,9 @@ class ImportController extends \yii\web\Controller
         $model = new CategoriesImport();
 
         if ($model->load([$model->formName() => $this->request->post()]) && $model->save()) {
-            Yii::warning('imported');
+            if ($model->imported_rows_num > 0) {
+            	Yii::$app->getSession()->setFlash('success', "<b>{$model->imported_rows_num}</b> категорий добавлено или обновлено");
+            }
         }
 
         return $this->render('categories', [

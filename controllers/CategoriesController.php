@@ -21,6 +21,7 @@ use yii\web\Response;
 
 use ytubes\admin\videos\models\VideosCategories;
 use ytubes\admin\videos\models\forms\CategoriesImport;
+use ytubes\admin\videos\models\repositories\CategoriesRepository;
 
 /**
  * CategoriesController implements the CRUD actions for VideosCategories model.
@@ -79,7 +80,6 @@ class CategoriesController extends \yii\web\Controller
      */
     public function actionIndex()
     {
-        Yii::warning(Yii::$app->params);
         $createModel = new VideosCategories();
         $categories = VideosCategories::find()
         	->orderBy(['position' => SORT_ASC])
@@ -110,8 +110,14 @@ class CategoriesController extends \yii\web\Controller
         	->orderBy(['position' => SORT_ASC])
         	->all();
 
+        $model = CategoriesRepository::findById($id);
+
+        if (!$model instanceof VideosCategories) {
+        	throw new NotFoundHttpException('The requested category does not exist.');
+        }
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
             'categories' => $categories,
         ]);
     }
@@ -142,7 +148,11 @@ class CategoriesController extends \yii\web\Controller
      */
     public function actionUpdate($id)
     {
-        $model = $this->findModel($id);
+        $model = CategoriesRepository::findById($id);
+
+        if (!$model instanceof VideosCategories) {
+        	throw new NotFoundHttpException('The requested category does not exist.');
+        }
 
         $categories = VideosCategories::find()
         	->orderBy(['position' => SORT_ASC])
@@ -166,7 +176,18 @@ class CategoriesController extends \yii\web\Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $category = CategoriesRepository::findById($id);
+
+        if (!$category instanceof VideosCategories) {
+        	throw new NotFoundHttpException('The requested category does not exist.');
+        }
+        $title = $category->title;
+
+        if ($category->delete()) {
+        	Yii::$app->getSession()->setFlash('success', "Категория \"<b>{$title}</b>\" успешно удалена");
+        } else {
+        	Yii::$app->getSession()->setFlash('error', "Удалить категрию \"<b>{$title}</b>\" не удалось");
+        }
 
         return $this->redirect(['index']);
     }

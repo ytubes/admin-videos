@@ -30,6 +30,11 @@ class CategoriesImport extends \yii\base\Model
     public $update_category;
 
     protected $model;
+	/**
+	 * @var int $imported_rows_num количество вставленных записей.
+	 */
+	public $imported_rows_num = 0;
+
 
     protected $options = [
     	'skip' => 'Пропустить',
@@ -105,7 +110,9 @@ class CategoriesImport extends \yii\base\Model
 						continue;
 					}
 
-					$this->insertCategory($newCategory);
+					if ($this->insertCategory($newCategory)) {
+						$this->imported_rows_num ++;
+					}
 				}
 
 				@unlink($filepath);
@@ -131,7 +138,9 @@ class CategoriesImport extends \yii\base\Model
 						continue;
 					}
 
-					$this->insertCategory($newCategory);
+					if ($this->insertCategory($newCategory)) {
+						$this->imported_rows_num ++;
+					}
 				}
 			}
 
@@ -149,11 +158,11 @@ class CategoriesImport extends \yii\base\Model
 	protected function insertCategory($newCategory)
 	{
 			// Ищем, существует ли категория.
-		if (isset($newCategory['category_id'])) {
+		if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
 			$category = VideosCategories::find()
 				->where(['category_id' => $newCategory['category_id']])
 				->one();
-		} elseif (isset($newCategory['title'])) {
+		} elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
 			$category = VideosCategories::find()
 				->where(['title' => $newCategory['title']])
 				->one();
@@ -167,7 +176,8 @@ class CategoriesImport extends \yii\base\Model
 		} else {
 				// Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
 			if ($this->update_category == false) {
-				return true;
+				$this->addError('csv_rows', "{$category->title} дубликат");
+				return false;
 			}
 		}
 
@@ -184,7 +194,13 @@ class CategoriesImport extends \yii\base\Model
 			$category->updated_at = gmdate('Y:m:d H:i:s');
 		}
 
-		return $category->save(true);
+		if (!$category->save(true)) {
+			$this->addError('csv_rows', "{$category->title} не сохранилась, возможно фейл с параметрами");
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

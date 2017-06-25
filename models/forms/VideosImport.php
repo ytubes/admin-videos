@@ -55,7 +55,9 @@ class VideosImport extends \yii\base\Model
      * @var string $template шаблон вывода вставленного видео.
      */
 	public $template;
-
+	/**
+	 * @var int $imported_rows_num количество вставленных записей.
+	 */
 	public $imported_rows_num = 0;
 
     protected $categories;
@@ -258,6 +260,11 @@ class VideosImport extends \yii\base\Model
 		}
 
 		$video->slug = $this->generateSlug($slug);
+
+			// Шаблон для ролика
+		if ($this->template !== '') {
+			$video->template = $this->template;
+		}
 
 		$video->updated_at = gmdate('Y:m:d H:i:s');
 		$video->created_at = gmdate('Y:m:d H:i:s');

@@ -29,6 +29,18 @@ $this->params['breadcrumbs'][] = 'Категории видео';
 
 		            <div class="box-body pad">
 
+						<?php if ($model->hasErrors('csv_rows')): ?>
+							<div class="alert alert-danger alert-dismissible">
+								<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+								<h4><i class="icon fa fa-exclamation-circle"></i> Следующие записи не были добавлены: </h4>
+								<ul>
+								<?php foreach ($model->getErrors('csv_rows') as $error): ?>
+									<li><?= $error ?></li>
+								<?php endforeach ?>
+								</ul>
+							</div>
+						<?php endif; ?>
+
 						<h4>Настройки ввода</h4>
 						<div class="row">
 							<div class="col-md-3 form-group">
@@ -48,7 +60,7 @@ $this->params['breadcrumbs'][] = 'Категории видео';
                 			</div>
 						</div>
 
-						<h4>Поля csv</h4>
+						<h4>Поля csv (название или ID обязательны)</h4>
 						<div class="row csv-fields">
 							<?php foreach ($model->fields as $field): ?>
 								<div class="col-md-2 form-group">

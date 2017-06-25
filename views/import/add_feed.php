@@ -31,6 +31,8 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 
 					    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
+					    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+
 						<h4>Настройки ввода</h4>
 						<div class="row">
 							<div class="col-md-3 form-group">

@@ -60,6 +60,13 @@ class CategoriesRepository extends \yii\base\Model
 		return VideosCategories::find();
 	}
 
+	public static function findById($id)
+	{
+		return self::find()
+			->where(['category_id' => (int) $id])
+			->one();
+	}
+
 	public function getCategoryById($id)
 	{
 		$this->getCategoriesIndexedById();

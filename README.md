@@ -25,7 +25,7 @@
     'migrate' => [
         'class' => 'yii\console\controllers\MigrateController',
            'migrationPath' => [
-                '@vendor/ytubes/admin-videos/migrations',
+                '@vendor/ytubes/videos-admin/migrations',
         ],
     ],
 ],
@@ -34,8 +34,8 @@
 ## Крон
 Также для нормальной работы нужные воркеры для крона:
 ```
-\ytubes\admin\videos\workers\RecalculateCTR * * * * *
-\ytubes\admin\videos\workers\SwitchTestImage * * * * *
-\ytubes\admin\videos\workers\ShiftCheckpoint * * * * *
+\ytubes\admin\videos\workers\RecalculateCTR */2 * * * *
+\ytubes\admin\videos\workers\SwitchTestImage */2 * * * *
+\ytubes\admin\videos\workers\ShiftCheckpoint */2 * * * *
 \ytubes\admin\videos\workers\SetCategoriesThumbs */5 * * * * (раз в пять минут)
 ```
