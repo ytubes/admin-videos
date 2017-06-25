@@ -14,9 +14,7 @@
         }
     },
     "scripts": {
-        "post-update-cmd": [
-            "php yii migrate"
-        ],
+        "post-update-cmd": "php yii migrate",
         "post-install-cmd": [
             "php yii migrate"
         ]
