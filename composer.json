@@ -20,5 +20,5 @@
         "post-install-cmd": [
             "php yii migrate"
         ]
-    },
+    }
 }
