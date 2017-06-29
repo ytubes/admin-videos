@@ -241,7 +241,7 @@ class m170610_174801_videos_init extends Migration
             ]);
         }
 
-        $tableName = 'cron_tasks';
+        $tableName = 'cron_jobs';
         $tableSchema = \Yii::$app->db->schema->getTableSchema($tableName);
 
         if ($tableSchema !== null) {
