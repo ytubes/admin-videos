@@ -20,7 +20,7 @@ use ytubes\admin\videos\models\VideosCategories;
  */
 class CategoriesImport extends \yii\base\Model
 {
-	public $delimiter;
+    public $delimiter;
     public $enclosure;
     public $fields;
 
@@ -30,36 +30,36 @@ class CategoriesImport extends \yii\base\Model
     public $update_category;
 
     protected $model;
-	/**
-	 * @var int $imported_rows_num количество вставленных записей.
-	 */
-	public $imported_rows_num = 0;
+    /**
+     * @var int $imported_rows_num количество вставленных записей.
+     */
+    public $imported_rows_num = 0;
 
 
     protected $options = [
-    	'skip' => 'Пропустить',
-    	'category_id' => 'id',
-    	'title' => 'Название',
-    	'slug' => 'Слаг',
-    	'meta_title' => 'Мета заголовок',
-    	'meta_description' => 'Мета описание',
-    	'h1' => 'Заголовок H1',
-    	'description' => 'Описание',
-    	'seotext' => 'СЕО текст',
-    	'param1' => 'Доп. поле 1',
-    	'param2' => 'Доп. поле 2',
-    	'param3' => 'Доп. поле 3',
+        'skip' => 'Пропустить',
+        'category_id' => 'id',
+        'title' => 'Название',
+        'slug' => 'Слаг',
+        'meta_title' => 'Мета заголовок',
+        'meta_description' => 'Мета описание',
+        'h1' => 'Заголовок H1',
+        'description' => 'Описание',
+        'seotext' => 'СЕО текст',
+        'param1' => 'Доп. поле 1',
+        'param2' => 'Доп. поле 2',
+        'param3' => 'Доп. поле 3',
     ];
 
-	public function __construct($config = [])
-	{
-		parent::__construct($config);
+    public function __construct($config = [])
+    {
+        parent::__construct($config);
 
-		$this->delimiter = '|';
-		$this->enclosure = '"';
-		$this->fields = ['skip'];
-		$this->update_category = false;
-	}
+        $this->delimiter = '|';
+        $this->enclosure = '"';
+        $this->fields = ['skip'];
+        $this->update_category = false;
+    }
 
     /**
      * @inheritdoc
@@ -82,132 +82,151 @@ class CategoriesImport extends \yii\base\Model
      * Проверяет правильность данных в файле или текстовом поле. Затем сохраняет в базу.
      * @return boolean whether the model passes validation
      */
-	public function save()
-	{
-		$this->csv_file = UploadedFile::getInstanceByName('csv_file');
+    public function save()
+    {
+        $this->csv_file = UploadedFile::getInstanceByName('csv_file');
 
-		if ($this->validate()) {
+        if ($this->validate()) {
 
-				// Если загружен файл, читаем с него.
-			if ($this->csv_file instanceof UploadedFile) {
-				$filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
-				$this->csv_file->saveAs($filepath);
+                // Если загружен файл, читаем с него.
+            if ($this->csv_file instanceof UploadedFile) {
+                $filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
+                $this->csv_file->saveAs($filepath);
 
-				$file = new SplFileObject($filepath);
-				$file->setFlags(SplFileObject::READ_CSV|SplFileObject::READ_AHEAD|SplFileObject::SKIP_EMPTY|SplFileObject::DROP_NEW_LINE);
-				$file->setCsvControl($this->delimiter, $this->enclosure);
+                $file = new SplFileObject($filepath);
+                $file->setFlags(SplFileObject::READ_CSV|SplFileObject::READ_AHEAD|SplFileObject::SKIP_EMPTY|SplFileObject::DROP_NEW_LINE);
+                $file->setCsvControl($this->delimiter, $this->enclosure);
 
-				foreach ($file as $csvParsedString) {
+                foreach ($file as $csvParsedString) {
 
-					$newCategory = [];
-					foreach ($this->fields as $key => $field) {
-						if (isset($csvParsedString[$key]) && $field !== 'skip') {
-							$newCategory[$field] = trim($csvParsedString[$key]);
-						}
-					}
+                    $newCategory = [];
+                    foreach ($this->fields as $key => $field) {
+                        if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                            $newCategory[$field] = trim($csvParsedString[$key]);
+                        }
+                    }
 
-					if (empty($newCategory)) {
-						continue;
-					}
+                    if (empty($newCategory)) {
+                        continue;
+                    }
 
-					if ($this->insertCategory($newCategory)) {
-						$this->imported_rows_num ++;
-					}
-				}
+                    if ($this->insertCategory($newCategory)) {
+                        $this->imported_rows_num ++;
+                    }
+                }
 
-				@unlink($filepath);
+                @unlink($filepath);
 
-				// Если файла нет, но загружено через текстовое поле, то будем читать с него.
-			} elseif (!empty($this->csv_rows) || $this->csv_rows !== '') {
+                // Если файла нет, но загружено через текстовое поле, то будем читать с него.
+            } elseif (!empty($this->csv_rows) || $this->csv_rows !== '') {
 
-				$rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
+                $rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
 
-				foreach ($rows as $row) {
-					$row = trim($row, " \t\n\r\0\x0B");
+                foreach ($rows as $row) {
+                    $row = trim($row, " \t\n\r\0\x0B");
 
-					$csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
+                    $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
 
-					$newCategory = [];
-					foreach ($this->fields as $key => $field) {
-						if (isset($csvParsedString[$key]) && $field !== 'skip') {
-							$newCategory[$field] = trim($csvParsedString[$key]);
-						}
-					}
+                    $newCategory = [];
+                    foreach ($this->fields as $key => $field) {
+                        if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                            $newCategory[$field] = trim($csvParsedString[$key]);
+                        }
+                    }
 
-					if (empty($newCategory)) {
-						continue;
-					}
+                    if (empty($newCategory)) {
+                        continue;
+                    }
 
-					if ($this->insertCategory($newCategory)) {
-						$this->imported_rows_num ++;
-					}
-				}
-			}
+                    if ($this->insertCategory($newCategory)) {
+                        $this->imported_rows_num ++;
+                    }
+                }
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
-	 * В случае перезаписи назначает новые параметры исходя из данных файла.
-	 * @return boolean было ли произведено обновление или вставка
-	 */
-	protected function insertCategory($newCategory)
-	{
-			// Ищем, существует ли категория.
-		if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
-			$category = VideosCategories::find()
-				->where(['category_id' => $newCategory['category_id']])
-				->one();
-		} elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
-			$category = VideosCategories::find()
-				->where(['title' => $newCategory['title']])
-				->one();
-		} else {
-			throw new InvalidParamException();
-		}
+    /**
+     * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
+     * В случае перезаписи назначает новые параметры исходя из данных файла.
+     * @return boolean было ли произведено обновление или вставка
+     */
+    protected function insertCategory($newCategory)
+    {
+            // Ищем, существует ли категория.
+        if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
+            $category = VideosCategories::find()
+                ->where(['category_id' => $newCategory['category_id']])
+                ->one();
+        } elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
+            $category = VideosCategories::find()
+                ->where(['title' => $newCategory['title']])
+                ->one();
+        } else {
+            $this->addError('csv_rows', "Требуется название или ID");
+            return false;
+        }
 
-			// Если ничего не нашлось, будем вставлять новый.
-		if (!($category instanceof VideosCategories)) {
-			$category = new VideosCategories();
-		} else {
-				// Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
-			if ($this->update_category == false) {
-				$this->addError('csv_rows', "{$category->title} дубликат");
-				return false;
-			}
-		}
+            // Если ничего не нашлось, будем вставлять новый.
+        if (!($category instanceof VideosCategories)) {
+            $category = new VideosCategories();
+        } else {
+                // Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
+            if ($this->update_category == false) {
+                $this->addError('csv_rows', "{$category->title} дубликат");
+                return false;
+            }
+        }
 
-		$category->attributes = $newCategory;
+        if (isset($newCategory['meta_description'])) {
+            $newCategory['meta_description'] = StringHelper::truncate($newCategory['meta_description'], 250);
+        }
 
-		if (empty($newCategory['slug']) || $newCategory['slug'] === '') {
-			$category->slug = \URLify::filter($newCategory['title']);
-		}
+        if (isset($newCategory['meta_title'])) {
+            $newCategory['meta_title'] = StringHelper::truncate($newCategory['meta_title'], 255, false);
+        }
 
-		if ($category->isNewRecord) {
-			$category->updated_at = gmdate('Y:m:d H:i:s');
-			$category->created_at = gmdate('Y:m:d H:i:s');
-		} else {
-			$category->updated_at = gmdate('Y:m:d H:i:s');
-		}
+        $category->attributes = $newCategory;
 
-		if (!$category->save(true)) {
-			$this->addError('csv_rows', "{$category->title} не сохранилась, возможно фейл с параметрами");
+        if (empty($newCategory['slug']) || $newCategory['slug'] === '') {
+            $category->slug = \URLify::filter($newCategory['title']);
+        }
 
-			return false;
-		}
+        if ($category->isNewRecord) {
+            $category->updated_at = gmdate('Y:m:d H:i:s');
+            $category->created_at = gmdate('Y:m:d H:i:s');
+        } else {
+            $category->updated_at = gmdate('Y:m:d H:i:s');
+        }
 
-		return true;
-	}
+        if (!$category->save(true)) {
+            $attErrors = $category->getErrors();
 
-	/**
-	 * @return array
-	 */
-	public function getOptions()
-	{
-		return $this->options;
-	}
+            $errorText = '<ul>';
+            foreach ($attErrors as $errors) {
+                foreach ($errors as $error) {
+                    $errorText .= '<li>' . $error . '</li>';
+                }
+            }
+            $errorText .= '</ul>';
+
+            $this->addError('csv_rows', "<b>{$category->title}</b> не сохранилось, причина: {$errorText}");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
 }
