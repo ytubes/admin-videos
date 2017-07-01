@@ -51,8 +51,8 @@ class VideosCategories extends \yii\db\ActiveRecord
         return [
             [['title'], 'required'],
             [['title', 'h1', 'image'], 'string', 'max' => 255],
-            [['meta_description'], 'string', 'max' => 200],
-            [['slug', 'meta_title'], 'string', 'max' => 70],
+            [['meta_description'], 'string', 'max' => 250],
+            [['slug', 'meta_title'], 'string', 'max' => 255],
             [['slug'], 'unique'],
 
             [['position', 'items_count', 'on_index', 'shows', 'clicks', 'reset_clicks_period'], 'integer'],
