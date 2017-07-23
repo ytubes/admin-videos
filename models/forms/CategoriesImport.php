@@ -182,6 +182,10 @@ class CategoriesImport extends \yii\base\Model
             }
         }
 
+        if (isset($newCategory['category_id'])) {
+            $category->category_id = (int) $newCategory['category_id'];
+        }
+
         if (isset($newCategory['meta_description'])) {
             $newCategory['meta_description'] = StringHelper::truncate($newCategory['meta_description'], 250);
         }

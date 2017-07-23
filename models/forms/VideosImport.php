@@ -222,7 +222,7 @@ class VideosImport extends \yii\base\Model
 				->one();
 
 			if ($video instanceof Videos) {
-				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат embed кода");
+				$this->addError('csv_rows', "{$newVideo['embed']} дубликат embed кода");
 				return false;
 			}
 		}
