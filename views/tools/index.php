@@ -22,29 +22,30 @@ $this->params['breadcrumbs'][] = $this->title;
 	            </div>
 
 	            <div class="box-body pad">
-<table class="table">
-<tr>
-	<td>
-		<h4>Случайные даты публикации видео</h4>
-		<div>Задать случайную дату в промежутке за последний год по текущую дату.</div>
-	</td>
-	<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-info" id="random_date" data-action="<?=Url::to(['random-date'])?>">Задать дату</button></td>
-</tr>
-<tr>
-	<td>
-		<h4>Обнуление статистики</h4>
-		<div>Обнулить полностью статистику кликов и показов тумб, категорий. А также просмотры видео, лайки и дизлайки.</div>
-	</td>
-	<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-warning" id="clear_stats" data-action="<?=Url::to(['clear-stats'])?>">Обнулить</button></td>
-</tr>
-<tr>
-	<td>
-		<h4>Очистить базу видео</h4>
-		<div>Полностью удалить видео, скриншоты, статистику по тумбам.</div>
-	</td>
-	<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-danger" id="clear_videos" data-action="<?=Url::to(['clear-videos'])?>">Удалить все видео</button></td>
-</tr>
-</table>
+
+					<table class="table">
+						<tr>
+							<td>
+								<h4>Случайные даты публикации видео</h4>
+								<div>Задать случайную дату в промежутке за последний год по текущую дату.</div>
+							</td>
+							<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-info" id="random_date" data-action="<?=Url::to(['random-date'])?>">Задать дату</button></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Обнуление статистики</h4>
+								<div>Обнулить полностью статистику кликов и показов тумб, категорий. А также просмотры видео, лайки и дизлайки.</div>
+							</td>
+							<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-warning" id="clear_stats" data-action="<?=Url::to(['clear-stats'])?>">Обнулить</button></td>
+						</tr>
+						<tr>
+							<td>
+								<h4>Очистить базу видео</h4>
+								<div>Полностью удалить видео, скриншоты, статистику по тумбам.</div>
+							</td>
+							<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-danger" id="clear_videos" data-action="<?=Url::to(['clear-videos'])?>">Удалить все видео</button></td>
+						</tr>
+					</table>
 
 				</div>
 			</div>
@@ -55,53 +56,57 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 
-$this->registerJS("
-(function() {
+$js = <<< 'JS'
+	(function() {
 
-	\$('#clear_stats').click(function(event) {
-		event.preventDefault();
-		var actionUrl = \$(this).data('action');
+		$('#clear_stats').click(function(event) {
+			event.preventDefault();
+			var actionUrl = $(this).data('action');
 
-		if (confirm('Обнулить статистику тумб, категорий и видео?')) {
-			\$.post(actionUrl, function( data ) {
-				if (data.success == true) {
-					toastr.success('Статистика сброшена', 'Успех!');
-				} else {
-					toastr.warning('Нечего очищать', 'Внимание!');
-				}
-			}, 'json');
-		}
-	});
+			if (confirm('Обнулить статистику тумб, категорий и видео?')) {
+				$.post(actionUrl, function( data ) {
+					if (data.success == true) {
+						toastr.success('Статистика сброшена', 'Успех!');
+					} else {
+						toastr.warning('Нечего очищать', 'Внимание!');
+					}
+				}, 'json');
+			}
+		});
 
-	\$('#random_date').click(function(event) {
-		event.preventDefault();
-		var actionUrl = \$(this).data('action');
+		$('#random_date').click(function(event) {
+			event.preventDefault();
+			var actionUrl = $(this).data('action');
 
-		if (confirm('Задать случайную дату у всех видео роликов??')) {
-			\$.post(actionUrl, function( data ) {
-				if (data.success == true) {
-					toastr.success('Новые даты публикации видео роликов заданы', 'Успех!');
-				} else {
-					toastr.warning('что-то пошло не так', 'Внимание!');
-				}
-			}, 'json');
-		}
-	});
+			if (confirm('Задать случайную дату у всех видео роликов??')) {
+				$.post(actionUrl, function( data ) {
+					if (data.success == true) {
+						toastr.success('Новые даты публикации видео роликов заданы', 'Успех!');
+					} else {
+						toastr.warning('что-то пошло не так', 'Внимание!');
+					}
+				}, 'json');
+			}
+		});
 
-	\$('#clear_videos').click(function(event) {
-		event.preventDefault();
-		var actionUrl = \$(this).data('action');
-		var confirmed = prompt('Для полного удаления видео напишите слово DELETE', '');
+		$('#clear_videos').click(function(event) {
+			event.preventDefault();
+			var actionUrl = $(this).data('action');
+			var confirmed = prompt('Для полного удаления видео напишите слово DELETE', '');
 
-		if (confirmed != null && confirmed === 'DELETE') {
-			\$.post(actionUrl, function( data ) {
-				if (data.success == true) {
-					toastr.success('Ролики удалены', 'Успех!');
-				} else {
-					toastr.warning('Нечего удалять', 'Внимание!');
-				}
-			}, 'json');
-		}
-	});
-})();", \yii\web\View::POS_END);
+			if (confirmed != null && confirmed === 'DELETE') {
+				$.post(actionUrl, function( data ) {
+					if (data.success == true) {
+						toastr.success('Ролики удалены', 'Успех!');
+					} else {
+						toastr.warning('Нечего удалять', 'Внимание!');
+					}
+				}, 'json');
+			}
+		});
+	})();
+JS;
+
+$this->registerJS($js, \yii\web\View::POS_END);
+
 ?>

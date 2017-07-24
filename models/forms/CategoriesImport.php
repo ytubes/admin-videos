@@ -1,6 +1,5 @@
 <?php
-
-namespace ytubes\admin\videos\models\forms;
+namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
@@ -13,7 +12,7 @@ use yii\web\NotFoundHttpException;
 use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use ytubes\admin\videos\models\VideosCategories;
+use ytubes\videos\admin\models\Category;
 
 /**
  * Модель для обработки формы импорта категорий через цсв файлы или просто текст.
@@ -153,27 +152,30 @@ class CategoriesImport extends \yii\base\Model
     /**
      * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
      * В случае перезаписи назначает новые параметры исходя из данных файла.
+     *
+     * @param array $newCategory Массив с данным для вставки новой категории
+     *
      * @return boolean было ли произведено обновление или вставка
      */
     protected function insertCategory($newCategory)
     {
             // Ищем, существует ли категория.
         if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
-            $category = VideosCategories::find()
+            $category = Category::find()
                 ->where(['category_id' => $newCategory['category_id']])
                 ->one();
         } elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
-            $category = VideosCategories::find()
+            $category = Category::find()
                 ->where(['title' => $newCategory['title']])
                 ->one();
         } else {
-            $this->addError('csv_rows', "Требуется название или ID");
+            $this->addError('csv_rows', 'Требуется название или ID');
             return false;
         }
 
             // Если ничего не нашлось, будем вставлять новый.
-        if (!($category instanceof VideosCategories)) {
-            $category = new VideosCategories();
+        if (!($category instanceof Category)) {
+            $category = new Category();
         } else {
                 // Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
             if ($this->update_category == false) {

@@ -1,20 +1,25 @@
 <?php
-
-namespace  ytubes\admin\videos\controllers;
-
+namespace ytubes\videos\admin\controllers;
 
 use Yii;
 
-use yii\filters\VerbFilter;
-use yii\filters\AccessControl;
-
 use yii\web\NotFoundHttpException;
 
-use ytubes\admin\videos\models\VideosStats;
-use ytubes\admin\videos\models\VideosCategories;
+use ytubes\videos\admin\models\RotationStats;
+use ytubes\videos\admin\models\Category;
 
 class StatsController extends \yii\web\Controller
 {
+    public $request = 'request';
+    public $response = 'response';
+
+    public function init()
+    {
+        parent::init();
+        	// Инжект request и response
+        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
+        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+    }
     /**
      * @inheritdoc
      */
@@ -22,7 +27,7 @@ class StatsController extends \yii\web\Controller
     {
         return [
 	       'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => \yii\filters\AccessControl::className(),
                'rules' => [
                    [
                        'allow' => true,
@@ -34,7 +39,7 @@ class StatsController extends \yii\web\Controller
                ],
 	       ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => \yii\filters\VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
                 ],
@@ -45,15 +50,15 @@ class StatsController extends \yii\web\Controller
     public function actionIndex()
     {
 		$data = [
-			'total_rows' => VideosStats::find()->count(),
-			'tested_rows' => VideosStats::find()->where(['tested_image' => 1])->count(),
-			'test_rows' => VideosStats::find()->where(['tested_image' => 0])->count(),
-			'tested_zero_ctr' => VideosStats::find()->where(['tested_image' => 1, 'ctr' => 0])->count(),
+			'total_rows' => RotationStats::find()->count(),
+			'tested_rows' => RotationStats::find()->where(['tested_image' => 1])->count(),
+			'test_rows' => RotationStats::find()->where(['tested_image' => 0])->count(),
+			'tested_zero_ctr' => RotationStats::find()->where(['tested_image' => 1, 'ctr' => 0])->count(),
 		];
 
 
 			// Статистика по категориям.
-		$categories = VideosCategories::find()
+		$categories = Category::find()
 			->indexBy('category_id')
 			->all();
 
@@ -88,7 +93,7 @@ class StatsController extends \yii\web\Controller
 			];
 		}
 
-		$data['total_categories'] = VideosCategories::find()->count();
+		$data['total_categories'] = Category::find()->count();
 
 
         return $this->render('index', [

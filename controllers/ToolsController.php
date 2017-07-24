@@ -1,6 +1,5 @@
 <?php
-
-namespace ytubes\admin\videos\controllers;
+namespace ytubes\videos\admin\controllers;
 
 use Yii;
 
@@ -12,15 +11,25 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 
 
-use ytubes\admin\videos\models\VideosCategories;
-use ytubes\admin\videos\models\forms\CategoriesImport;
-use ytubes\admin\videos\models\forms\Tools;
+use ytubes\videos\admin\models\VideosCategories;
+use ytubes\videos\admin\models\forms\CategoriesImport;
+use ytubes\videos\admin\models\forms\Tools;
 
 /**
  * ToolsController implements the CRUD actions for Tools model.
  */
 class ToolsController extends \yii\web\Controller
 {
+    public $request = 'request';
+    public $response = 'response';
+
+    public function init()
+    {
+        parent::init();
+        	// Инжект request и response
+        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
+        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+    }
     /**
      * @inheritdoc
      */
@@ -73,16 +82,14 @@ class ToolsController extends \yii\web\Controller
     }
 
     /**
-     * Creates a new VideosCategories model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
+     * Очищает статистику по видео (показы, просмотры и т.д.)
      * @return mixed
      */
     public function actionClearStats()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->clearStats()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->clearStats()) {
             return ['success' => true];
         } else {
             return ['success' => false];
@@ -96,10 +103,9 @@ class ToolsController extends \yii\web\Controller
      */
     public function actionRandomDate()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->randomDate()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->randomDate()) {
             return ['success' => true];
         } else {
             return ['success' => false];
@@ -113,10 +119,9 @@ class ToolsController extends \yii\web\Controller
      */
     public function actionClearVideos()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->clearVideos()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->clearVideos()) {
             return ['success' => true];
         } else {
             return ['success' => false];

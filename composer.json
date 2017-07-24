@@ -10,11 +10,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ytubes\\admin\\videos\\": ""
+            "ytubes\\videos\\admin\\": ""
         }
-    },
-    "scripts": {
-        "post-update-cmd": "echo \"yes\" | php yii migrate",
-        "post-install-cmd": "echo \"yes\" | php yii migrate"
     }
 }

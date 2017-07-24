@@ -1,6 +1,5 @@
 <?php
-
-namespace ytubes\admin\videos\models\forms;
+namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
@@ -13,11 +12,11 @@ use yii\web\NotFoundHttpException;
 use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use ytubes\admin\videos\models\Videos;
-use ytubes\admin\videos\models\VideosCategories;
-use ytubes\admin\videos\models\VideosImages;
-use ytubes\admin\videos\models\VideosStats;
-use ytubes\admin\videos\models\ImportFeed;
+use ytubes\videos\admin\models\Video;
+use ytubes\videos\admin\models\Category;
+use ytubes\videos\admin\models\Image;
+use ytubes\videos\admin\models\RotationStats;
+use ytubes\videos\admin\models\ImportFeed;
 
 /**
  * Пометка: Сделать проверку на соответствие полей. Если не соответствует - писать в лог.
@@ -111,11 +110,11 @@ class VideosImport extends \yii\base\Model
 	{
 		$this->csv_file = UploadedFile::getInstanceByName('csv_file');
 		if (in_array('categories_ids', $this->fields)) {
-			$this->categories = VideosCategories::find()
+			$this->categories = Category::find()
 				->indexBy('category_id')
 				->all();
 		} else {
-			$this->categories = VideosCategories::find()
+			$this->categories = Category::find()
 				->indexBy('title')
 				->all();
 		}
@@ -186,18 +185,20 @@ class VideosImport extends \yii\base\Model
 
 	/**
 	 * Осуществляет вставку видео. Если видео уже существут в базе (проверяется по source_url и embed), то вставка просто игнорируется.
+	 *
 	 * @param array $newVideo массив с данными для вставки нового видео.
+	 *
 	 * @return boolean была ли произведена вставка
 	 */
 	protected function insertVideo($newVideo)
 	{
 			// Ищем, существует ли видео по иду.
 		if (isset($newVideo['video_id'])) {
-			$video = Videos::find()
+			$video = Video::find()
 				->where(['video_id' => $newVideo['video_id']])
 				->one();
 
-			if ($video instanceof Videos) {
+			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['video_id']} дубликат идентификатора");
 				return false;
 			}
@@ -205,11 +206,11 @@ class VideosImport extends \yii\base\Model
 
 			// Ищем, существует ли видео по урлу источника.
 		if ($this->skip_duplicate_urls == 1 && isset($newVideo['source_url']) && $newVideo['source_url'] !== '') {
-			$video = Videos::find()
+			$video = Video::find()
 				->where(['source_url' => $newVideo['source_url']])
 				->one();
 
-			if ($video instanceof Videos) {
+			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат урла источника");
 				return false;
 			}
@@ -217,18 +218,18 @@ class VideosImport extends \yii\base\Model
 
 			// Ищем, существует ли видео по embed коду.
 		if ($this->skip_duplicate_embeds == 1 && isset($newVideo['embed'])) {
-			$video = Videos::find()
+			$video = Video::find()
 				->where(['embed' => $newVideo['embed']])
 				->one();
 
-			if ($video instanceof Videos) {
+			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['embed']} дубликат embed кода");
 				return false;
 			}
 		}
 
 			// Если ничего не нашлось, будем вставлять новый.
-		$video = new Videos();
+		$video = new Video();
 
 			// Если у видео есть категории, вынесем их в отдельный массив.
 		$videoCategories = [];
@@ -281,7 +282,7 @@ class VideosImport extends \yii\base\Model
 				$categoryTitle = trim(strip_tags($videoCategory));
 					// Если категории не существует и флажок "не создавать новые" выключен, добавим категорию.
 				if (!isset($this->categories[$categoryTitle]) && $this->skip_new_categories == false) {
-					$category = new VideosCategories();
+					$category = new Category();
 
 					$category->title = $categoryTitle;
 					$category->slug = \URLify::filter($categoryTitle);
@@ -304,7 +305,7 @@ class VideosImport extends \yii\base\Model
 		if (!(empty($videoScreenshots))) {
 
 			foreach ($videoScreenshots as $key => $videoScreenshot) {
-				$screenshot = new VideosImages();
+				$screenshot = new Image();
 
 				$screenshot->video_id = $video->video_id;
 				$screenshot->position = $key;
@@ -331,14 +332,14 @@ class VideosImport extends \yii\base\Model
 
 			foreach ($categories as $category) {
 				foreach ($screenshots as $sKey => $screenshot) {
-					$videoStats = VideosStats::find()
+					$videoStats = RotationStats::find()
 						->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
 						->one();
 
-					if ($videoStats instanceof VideosStats)
+					if ($videoStats instanceof RotationStats)
 						continue;
 
-					$videoStats = new VideosStats();
+					$videoStats = new RotationStats();
 
 					$videoStats->video_id = $video->video_id;
 					$videoStats->category_id = $category->category_id;
@@ -362,48 +363,13 @@ class VideosImport extends \yii\base\Model
 
 	/**
 	 * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
+	 *
 	 * В случае перезаписи назначает новые параметры исходя из данных файла.
+	 *
 	 * @return boolean было ли произведено обновление или вставка
 	 */
 	protected function insertCategory($newCategory)
 	{
-			// Ищем, существует ли категория.
-		/*if (isset($newCategory['category_id'])) {
-			$category = VideosCategories::find()
-				->where(['category_id' => $newCategory['category_id']])
-				->one();
-		} elseif (isset($newCategory['title'])) {
-			$category = VideosCategories::find()
-				->where(['title' => $newCategory['title']])
-				->one();
-		} else {
-			throw new InvalidParamException();
-		}
-
-			// Если ничего не нашлось, будем вставлять новый.
-		if (!($category instanceof VideosCategories)) {
-			$category = new VideosCategories();
-		} else {
-				// Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
-			if ($this->replace == false) {
-				return true;
-			}
-		}
-
-		$category->attributes = $newCategory;
-
-		if (!isset($newCategory['slug']) || empty($newCategory['slug'])) {
-			$category->slug = URLify::filter($newCategory['title']);
-		}
-
-		if ($category->isNewRecord) {
-			$category->updated_at = gmdate('Y:m:d H:i:s');
-			$category->created_at = gmdate('Y:m:d H:i:s');
-		} else {
-			$category->updated_at = gmdate('Y:m:d H:i:s');
-		}
-
-		return $category->save(true);*/
 	}
 
 	/**
@@ -435,9 +401,9 @@ class VideosImport extends \yii\base\Model
 	 */
 	private function checkUniqueSlug($slug)
 	{
-		$sql = "SELECT `video_id` FROM `" . Videos::tableName() . "` WHERE `slug`='{$slug}'";
+		$sql = "SELECT `video_id` FROM `" . Video::tableName() . "` WHERE `slug`='{$slug}'";
 
-		$id = Videos::getDb()->createCommand($sql)
+		$id = Video::getDb()->createCommand($sql)
            ->queryOne();
 
 		return false === $id;

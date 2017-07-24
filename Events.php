@@ -1,11 +1,9 @@
 <?php
+namespace ytubes\videos\admin;
 
-namespace ytubes\admin\videos;
+use Yii;
 
-use \Yii;
-use \yii\base\Object;
-
-class Events extends Object
+class Events //extends \yii\base\Object
 {
     public static function onSettingsMenuInit($event)
     {
@@ -17,5 +15,4 @@ class Events extends Object
             'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'videos' && Yii::$app->controller->id === 'settings')
         ]);
     }
-
 }

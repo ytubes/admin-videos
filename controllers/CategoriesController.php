@@ -1,30 +1,18 @@
 <?php
-
-namespace ytubes\admin\videos\controllers;
+namespace ytubes\videos\admin\controllers;
 
 use Yii;
 
 use yii\base\DynamicModel;
-
-use yii\di\Instance;
-
-use yii\filters\VerbFilter;
-use yii\filters\AccessControl;
-use yii\filters\ContentNegotiator;
-
 use yii\data\ActiveDataProvider;
-
 use yii\web\NotFoundHttpException;
-use yii\web\Request;
-use yii\web\Response;
 
-
-use ytubes\admin\videos\models\VideosCategories;
-use ytubes\admin\videos\models\forms\CategoriesImport;
-use ytubes\admin\videos\models\repositories\CategoriesRepository;
+use ytubes\videos\admin\models\Category;
+use ytubes\videos\admin\models\forms\CategoriesImport;
+use ytubes\videos\admin\models\finders\CategoryFinder;
 
 /**
- * CategoriesController implements the CRUD actions for VideosCategories model.
+ * CategoriesController implements the CRUD actions for Category model.
  */
 class CategoriesController extends \yii\web\Controller
 {
@@ -35,8 +23,8 @@ class CategoriesController extends \yii\web\Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = Instance::ensure($this->request, Request::className());
-        $this->response = Instance::ensure($this->response, Response::className());
+        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
+        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
     }
 
     /**
@@ -46,7 +34,7 @@ class CategoriesController extends \yii\web\Controller
     {
         return [
 			'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => \yii\filters\AccessControl::className(),
                'rules' => [
                    [
                        'allow' => true,
@@ -58,14 +46,14 @@ class CategoriesController extends \yii\web\Controller
                ],
 			],
 			'verbs' => [
-				'class' => VerbFilter::className(),
+				'class' => \yii\filters\VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
                     'save-order' => ['POST'],
                 ],
             ],
 	        'contentNegotiator' => [
-	            'class' => ContentNegotiator::className(),
+	            'class' => \yii\filters\ContentNegotiator::className(),
 	            'only' => ['save-order'],
 	            'formats' => [
 	                'application/json' => \yii\web\Response::FORMAT_JSON,
@@ -75,18 +63,18 @@ class CategoriesController extends \yii\web\Controller
     }
 
     /**
-     * Lists all VideosCategories models.
+     * Lists all Category models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $createModel = new VideosCategories();
-        $categories = VideosCategories::find()
+        $createModel = new Category();
+        $categories = Category::find()
         	->orderBy(['position' => SORT_ASC])
         	->all();
 
         $dataProvider = new ActiveDataProvider([
-            'query' => VideosCategories::find(),
+            'query' => Category::find(),
 			'pagination' => [
 				'pageSize' => 500,
 			],
@@ -100,19 +88,19 @@ class CategoriesController extends \yii\web\Controller
     }
 
     /**
-     * Displays a single VideosCategories model.
+     * Displays a single Category model.
      * @param integer $id
      * @return mixed
      */
     public function actionView($id)
     {
-        $categories = VideosCategories::find()
+        $categories = Category::find()
         	->orderBy(['position' => SORT_ASC])
         	->all();
 
-        $model = CategoriesRepository::findById($id);
+        $model = CategoryFinder::findById($id);
 
-        if (!$model instanceof VideosCategories) {
+        if (!$model instanceof Category) {
         	throw new NotFoundHttpException('The requested category does not exist.');
         }
 
@@ -121,44 +109,25 @@ class CategoriesController extends \yii\web\Controller
             'categories' => $categories,
         ]);
     }
-
     /**
-     * Creates a new VideosCategories model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
-    public function actionCreate()
-    {
-        $model = new VideosCategories();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->category_id]);
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Updates an existing VideosCategories model.
+     * Updates an existing Category model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
      */
     public function actionUpdate($id)
     {
-        $model = CategoriesRepository::findById($id);
+        $model = CategoryFinder::findById($id);
 
-        if (!$model instanceof VideosCategories) {
+        if (!$model instanceof Category) {
         	throw new NotFoundHttpException('The requested category does not exist.');
         }
 
-        $categories = VideosCategories::find()
+        $categories = Category::find()
         	->orderBy(['position' => SORT_ASC])
         	->all();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        if ($model->load($this->request->post()) && $model->save()) {
             Yii::$app->getSession()->setFlash('success', 'Новые данные для категории сохранены');
         }
 
@@ -169,16 +138,16 @@ class CategoriesController extends \yii\web\Controller
     }
 
     /**
-     * Deletes an existing VideosCategories model.
+     * Deletes an existing Category model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
      */
     public function actionDelete($id)
     {
-        $category = CategoriesRepository::findById($id);
+        $category = CategoryFinder::findById($id);
 
-        if (!$category instanceof VideosCategories) {
+        if (!$category instanceof Category) {
         	throw new NotFoundHttpException('The requested category does not exist.');
         }
         $title = $category->title;
@@ -193,7 +162,7 @@ class CategoriesController extends \yii\web\Controller
     }
 
     /**
-     * Displays a single VideosCategories model.
+     * Displays a single Category model.
      * @param integer $id
      * @return mixed
      */
@@ -237,7 +206,7 @@ class CategoriesController extends \yii\web\Controller
 		try {
 			$categories_ids_list = implode(',', $validationModel->categories_ids);
 
-			$sql = "UPDATE {{" . VideosCategories::tableName() . "}}
+			$sql = "UPDATE `" . Category::tableName() . "`
 					SET `position` = FIND_IN_SET(`category_id`, '{$categories_ids_list}')
 					WHERE FIND_IN_SET(`category_id`, '{$categories_ids_list}')!=0";
 
@@ -259,15 +228,15 @@ class CategoriesController extends \yii\web\Controller
     }
 
     /**
-     * Finds the VideosCategories model based on its primary key value.
+     * Finds the Category model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return VideosCategories the loaded model
+     * @return Category the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = VideosCategories::findOne($id)) !== null) {
+        if (($model = Category::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
