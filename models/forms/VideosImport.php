@@ -3,19 +3,16 @@ namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
-
 use yii\base\InvalidParamException;
-
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
-
 use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use ytubes\videos\admin\models\Video;
-use ytubes\videos\admin\models\Category;
-use ytubes\videos\admin\models\Image;
-use ytubes\videos\admin\models\RotationStats;
+use ytubes\videos\models\Video;
+use ytubes\videos\models\Category;
+use ytubes\videos\models\Image;
+use ytubes\videos\models\RotationStats;
 use ytubes\videos\admin\models\ImportFeed;
 
 /**

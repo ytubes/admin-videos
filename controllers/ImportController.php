@@ -2,8 +2,14 @@
 namespace ytubes\videos\admin\controllers;
 
 use Yii;
+use yii\di\Instance;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\Controller;
+use yii\web\Request;
+use yii\web\Response;
 
 use ytubes\videos\admin\models\forms\CategoriesImport;
 use ytubes\videos\admin\models\forms\VideosImport;
@@ -12,7 +18,7 @@ use ytubes\videos\admin\models\ImportFeed;
 /**
  * CategoriesController implements the CRUD actions for VideosCategories model.
  */
-class ImportController extends \yii\web\Controller
+class ImportController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
@@ -21,8 +27,8 @@ class ImportController extends \yii\web\Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
-        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+        $this->request = Instance::ensure($this->request, Request::className());
+        $this->response = Instance::ensure($this->response, Response::className());
     }
 
     /**
@@ -32,7 +38,7 @@ class ImportController extends \yii\web\Controller
     {
         return [
 			'access' => [
-	           'class' => \yii\filters\AccessControl::className(),
+	           'class' => AccessControl::className(),
                'rules' => [
                    [
                        'allow' => true,
@@ -44,7 +50,7 @@ class ImportController extends \yii\web\Controller
                ],
 			],
 			'verbs' => [
-				'class' => \yii\filters\VerbFilter::className(),
+				'class' => VerbFilter::className(),
                 'actions' => [
                     'delete-feed' => ['POST'],
                 ],

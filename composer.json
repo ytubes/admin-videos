@@ -6,6 +6,7 @@
         "yiisoft/yii2": "~2.0.9",
         "yiisoft/yii2-jui": "~2.0.0",
         "ytubes/core": ">=0.0.1",
+        "ytubes/videos": "dev-master",
         "jbroadway/urlify": "^1.1"
     },
     "autoload": {

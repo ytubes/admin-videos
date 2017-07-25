@@ -2,19 +2,25 @@
 namespace ytubes\videos\admin\controllers;
 
 use Yii;
-
+use yii\di\Instance;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
+use yii\filters\ContentNegotiator;
 use yii\base\DynamicModel;
 use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\Request;
+use yii\web\Response;
+use yii\web\Controller;
 
-use ytubes\videos\admin\models\Category;
+use ytubes\videos\models\Category;
 use ytubes\videos\admin\models\forms\CategoriesImport;
 use ytubes\videos\admin\models\finders\CategoryFinder;
 
 /**
  * CategoriesController implements the CRUD actions for Category model.
  */
-class CategoriesController extends \yii\web\Controller
+class CategoriesController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
@@ -23,8 +29,8 @@ class CategoriesController extends \yii\web\Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
-        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+        $this->request = Instance::ensure($this->request, Request::className());
+        $this->response = Instance::ensure($this->response, Response::className());
     }
 
     /**
@@ -34,7 +40,7 @@ class CategoriesController extends \yii\web\Controller
     {
         return [
 			'access' => [
-	           'class' => \yii\filters\AccessControl::className(),
+	           'class' => AccessControl::className(),
                'rules' => [
                    [
                        'allow' => true,
@@ -46,17 +52,17 @@ class CategoriesController extends \yii\web\Controller
                ],
 			],
 			'verbs' => [
-				'class' => \yii\filters\VerbFilter::className(),
+				'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
                     'save-order' => ['POST'],
                 ],
             ],
 	        'contentNegotiator' => [
-	            'class' => \yii\filters\ContentNegotiator::className(),
+	            'class' => ContentNegotiator::className(),
 	            'only' => ['save-order'],
 	            'formats' => [
-	                'application/json' => \yii\web\Response::FORMAT_JSON,
+	                'application/json' => Response::FORMAT_JSON,
 	            ],
 	        ],
         ];
@@ -225,21 +231,5 @@ class CategoriesController extends \yii\web\Controller
 		    	'message' => $e->getMessage()
 		    ];
 		}
-    }
-
-    /**
-     * Finds the Category model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return Category the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    protected function findModel($id)
-    {
-        if (($model = Category::findOne($id)) !== null) {
-            return $model;
-        } else {
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
     }
 }

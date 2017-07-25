@@ -1,14 +1,8 @@
 <?php
 namespace ytubes\videos\admin\models\finders;
 
-use Yii;
-use yii\data\ActiveDataProvider;
-use yii\data\Sort;
 use yii\base\Model;
-
-use ytubes\videos\admin\models\Video;
-use ytubes\videos\admin\models\RotationStats;
-use ytubes\videos\admin\models\Category;
+use ytubes\videos\models\Category;
 
 /**
  * CategoryFinder represents the model behind the search form about `ytubes\videos\admin\models\Category`.
@@ -63,6 +57,20 @@ class CategoryFinder extends Model
 	{
 		return self::find()
 			->where(['category_id' => (int) $id])
+			->one();
+	}
+
+	public static function findByTitle($title)
+	{
+		return self::find()
+			->where(['title' => $title])
+			->one();
+	}
+
+	public static function findBySlug($slug)
+	{
+		return self::find()
+			->where(['slug' => $slug])
 			->one();
 	}
 

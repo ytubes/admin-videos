@@ -3,21 +3,17 @@ namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
-
-use yii\base\InvalidParamException;
-
+use yii\base\Model;
 use yii\web\UploadedFile;
-use yii\web\NotFoundHttpException;
-
-use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use ytubes\videos\admin\models\Category;
+use ytubes\videos\admin\models\finders\CategoryFinder;
+use ytubes\videos\models\Category;
 
 /**
  * Модель для обработки формы импорта категорий через цсв файлы или просто текст.
  */
-class CategoriesImport extends \yii\base\Model
+class CategoriesImport extends Model
 {
     public $delimiter;
     public $enclosure;
@@ -148,7 +144,6 @@ class CategoriesImport extends \yii\base\Model
 
         return false;
     }
-
     /**
      * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
      * В случае перезаписи назначает новые параметры исходя из данных файла.
@@ -160,14 +155,10 @@ class CategoriesImport extends \yii\base\Model
     protected function insertCategory($newCategory)
     {
             // Ищем, существует ли категория.
-        if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
-            $category = Category::find()
-                ->where(['category_id' => $newCategory['category_id']])
-                ->one();
-        } elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
-            $category = Category::find()
-                ->where(['title' => $newCategory['title']])
-                ->one();
+        if (!empty($newCategory['category_id'])) {
+            $category = CategoryFinder::findById($newCategory['category_id']);
+        } elseif (!empty($newCategory['title'])) {
+            $category = CategoryFinder::findByTitle($newCategory['title']);
         } else {
             $this->addError('csv_rows', 'Требуется название или ID');
             return false;

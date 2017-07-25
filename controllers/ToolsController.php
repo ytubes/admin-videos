@@ -2,23 +2,21 @@
 namespace ytubes\videos\admin\controllers;
 
 use Yii;
-
-use yii\filters\VerbFilter;
+use yii\di\Instance;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\filters\ContentNegotiator;
-
-use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\Controller;
+use yii\web\Request;
+use yii\web\Response;
 
-
-use ytubes\videos\admin\models\VideosCategories;
-use ytubes\videos\admin\models\forms\CategoriesImport;
 use ytubes\videos\admin\models\forms\Tools;
 
 /**
- * ToolsController implements the CRUD actions for Tools model.
+ * ToolsController это всякие инструменты.
  */
-class ToolsController extends \yii\web\Controller
+class ToolsController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
@@ -27,8 +25,8 @@ class ToolsController extends \yii\web\Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
-        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+        $this->request = Instance::ensure($this->request, Request::className());
+        $this->response =Instance::ensure($this->response, Response::className());
     }
     /**
      * @inheritdoc
@@ -62,7 +60,7 @@ class ToolsController extends \yii\web\Controller
 	            'only' => ['clear-stats', 'random-date', 'clear-videos'],
 	            'formatParam' => '_format',
 	            'formats' => [
-	                'application/json' => \yii\web\Response::FORMAT_JSON,
+	                'application/json' => Response::FORMAT_JSON,
 	            ],
 	        ],
         ];

@@ -7,9 +7,9 @@ use yii\data\ActiveDataProvider;
 use yii\data\Sort;
 use yii\base\Model;
 
-use ytubes\videos\admin\models\Video;
-use ytubes\videos\admin\models\RotationStats;
-use ytubes\videos\admin\models\Category;
+use ytubes\videos\models\Video;
+use ytubes\videos\models\RotationStats;
+use ytubes\videos\models\Category;
 
 /**
  * VideoFinder represents the model behind the search form about `ytubes\videos\admin\models\Video`.

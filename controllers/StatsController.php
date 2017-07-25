@@ -2,13 +2,18 @@
 namespace ytubes\videos\admin\controllers;
 
 use Yii;
-
+use yii\di\Instance;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
+use yii\web\Controller;
+use yii\web\Request;
+use yii\web\Response;
 
-use ytubes\videos\admin\models\RotationStats;
-use ytubes\videos\admin\models\Category;
+use ytubes\videos\models\RotationStats;
+use ytubes\videos\models\Category;
 
-class StatsController extends \yii\web\Controller
+class StatsController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
@@ -17,8 +22,8 @@ class StatsController extends \yii\web\Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::className());
-        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::className());
+        $this->request = Instance::ensure($this->request, Request::className());
+        $this->response = Instance::ensure($this->response, Response::className());
     }
     /**
      * @inheritdoc
@@ -27,7 +32,7 @@ class StatsController extends \yii\web\Controller
     {
         return [
 	       'access' => [
-	           'class' => \yii\filters\AccessControl::className(),
+	           'class' => AccessControl::className(),
                'rules' => [
                    [
                        'allow' => true,
@@ -39,7 +44,7 @@ class StatsController extends \yii\web\Controller
                ],
 	       ],
             'verbs' => [
-                'class' => \yii\filters\VerbFilter::className(),
+                'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
                 ],
