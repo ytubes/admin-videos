@@ -2,11 +2,10 @@
 namespace ytubes\videos\admin\cron\jobs;
 
 use Yii;
-use yii\db\Expression;
 
-use ytubes\videos\admin\models\RotationStats;
-use ytubes\videos\admin\models\Category;
-use ytubes\videos\admin\models\Image;
+use ytubes\videos\models\RotationStats;
+use ytubes\videos\models\Category;
+use ytubes\videos\models\Image;
 use ytubes\videos\admin\models\finders\VideoFinder;
 
 /**

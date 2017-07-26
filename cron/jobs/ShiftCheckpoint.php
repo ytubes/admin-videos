@@ -2,9 +2,8 @@
 namespace ytubes\videos\admin\cron\jobs;
 
 use Yii;
-use yii\db\Expression;
 
-use ytubes\videos\admin\models\RotationStats;
+use ytubes\videos\models\RotationStats;
 
 /**
  * ShiftCheckpoint смещает чек поинт вправо, если просмотры достигли границы 1\5 от расчетного периода ЦТР

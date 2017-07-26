@@ -2,9 +2,8 @@
 namespace ytubes\videos\admin\cron\jobs;
 
 use Yii;
-use yii\db\Expression;
 
-use ytubes\videos\admin\models\RotationStats;
+use ytubes\videos\models\RotationStats;
 
 /**
  * SwitchTestImage завершает тестирование тумбы, если у нее набрались просмотры
