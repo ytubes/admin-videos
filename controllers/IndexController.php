@@ -26,8 +26,8 @@ class IndexController extends Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = Instance::ensure($this->request, Request::className());
-        $this->response = Instance::ensure($this->response, Response::className());
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response = Instance::ensure($this->response, Response::class);
     }
     /**
      * @inheritdoc
@@ -36,7 +36,7 @@ class IndexController extends Controller
     {
         return [
 	       'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -48,7 +48,7 @@ class IndexController extends Controller
                ],
 	       ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                 ],

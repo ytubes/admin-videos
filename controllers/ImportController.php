@@ -27,8 +27,8 @@ class ImportController extends Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = Instance::ensure($this->request, Request::className());
-        $this->response = Instance::ensure($this->response, Response::className());
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response = Instance::ensure($this->response, Response::class);
     }
 
     /**
@@ -38,7 +38,7 @@ class ImportController extends Controller
     {
         return [
 			'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -50,7 +50,7 @@ class ImportController extends Controller
                ],
 			],
 			'verbs' => [
-				'class' => VerbFilter::className(),
+				'class' => VerbFilter::class,
                 'actions' => [
                     'delete-feed' => ['POST'],
                 ],
@@ -132,13 +132,13 @@ class ImportController extends Controller
     {
         $model = new ImportFeed();
 
-        if ($model->load($this->request->post()) && $model->save()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->save()) {
             return $this->redirect(['videos', 'preset' => $model->feed_id]);
-        } else {
-            return $this->render('add_feed', [
-                'model' => $model,
-            ]);
         }
+
+        return $this->render('add_feed', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -155,11 +155,11 @@ class ImportController extends Controller
 
         if ($model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['videos', 'preset' => $model->feed_id]);
-        } else {
-            return $this->render('update_feed', [
-                'model' => $model,
-            ]);
         }
+
+        return $this->render('update_feed', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -178,6 +178,7 @@ class ImportController extends Controller
 
         if ($model->delete()) {
         	Yii::$app->getSession()->setFlash('success', "Фид \"<b>$name</b>\" успешно удален.");
+
             return $this->redirect(['list-feeds']);
         }
     }

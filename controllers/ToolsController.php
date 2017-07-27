@@ -25,8 +25,8 @@ class ToolsController extends Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = Instance::ensure($this->request, Request::className());
-        $this->response =Instance::ensure($this->response, Response::className());
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response =Instance::ensure($this->response, Response::class);
     }
     /**
      * @inheritdoc
@@ -35,7 +35,7 @@ class ToolsController extends Controller
     {
         return [
 	       'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -47,7 +47,7 @@ class ToolsController extends Controller
                ],
 	       ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                     'clear-stats' => ['POST'],
@@ -56,7 +56,7 @@ class ToolsController extends Controller
                 ],
             ],
 	        'contentNegotiator' => [
-	            'class' => ContentNegotiator::className(),
+	            'class' => ContentNegotiator::class,
 	            'only' => ['clear-stats', 'random-date', 'clear-videos'],
 	            'formatParam' => '_format',
 	            'formats' => [

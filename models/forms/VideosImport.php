@@ -14,6 +14,7 @@ use ytubes\videos\models\Category;
 use ytubes\videos\models\Image;
 use ytubes\videos\models\RotationStats;
 use ytubes\videos\admin\models\ImportFeed;
+use ytubes\videos\admin\models\finders\VideoFinder;
 
 /**
  * Пометка: Сделать проверку на соответствие полей. Если не соответствует - писать в лог.
@@ -46,7 +47,11 @@ class VideosImport extends \yii\base\Model
     /**
      * @var boolean $external_images будут использоваться внешние тумбы или скачиваться и нарезаться на сервере.
      */
-	public $external_images; // Добавить в базу тумб флаг "внешняя".
+	public $external_images;
+    /**
+     * @var boolean пропустить первую строчку в CSV.
+     */
+	public $skip_first_line;
     /**
      * @var string $template шаблон вывода вставленного видео.
      */
@@ -55,14 +60,25 @@ class VideosImport extends \yii\base\Model
 	 * @var int $imported_rows_num количество вставленных записей.
 	 */
 	public $imported_rows_num = 0;
-
+	/**
+	 * @var array $categories категории раздела видео.
+	 */
     protected $categories;
-
     /**
      * @var array $option опции для тега select, отвечающего за набор полей csv
      */
     protected $options;
-
+    /**
+     * @var array $not_inserted_rows забракованные строчки из CSV
+     */
+	protected $not_inserted_rows = [];
+    /**
+     * @var array $not_inserted_ids Не вставленные иды видео, если такие были.
+     */
+	protected $not_inserted_ids = [];
+	/**
+     * @var array $preset_options опции для select тега (выбор фидов вставки)
+     */
     protected $preset_options;
 
 	public function __construct(ImportFeed $importFeed, $config = [])
@@ -80,6 +96,10 @@ class VideosImport extends \yii\base\Model
 		$options = array_column($presets, 'name', 'feed_id');
 		$this->preset_options = [0 => 'Default'] + $options;
 
+        	// Отключить логи
+        if (Yii::$app->hasModule('log') && is_object(Yii::$app->log->targets['file'])) {
+        	Yii::$app->log->targets['file']->enabled = false;
+        }
 	}
 
     /**
@@ -89,10 +109,13 @@ class VideosImport extends \yii\base\Model
     {
         return [
             [['delimiter', 'fields'], 'required'],
-            ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
-            [['delimiter', 'enclosure', 'csv_rows'], 'filter', 'filter' => 'trim'],
+            ['fields', 'each', 'rule' => ['in', 'range' => array_keys($this->options)], 'skipOnEmpty' => false],
             [['delimiter', 'enclosure', 'csv_rows'], 'string'],
-            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images'], 'boolean'],
+            [['delimiter', 'enclosure', 'csv_rows', 'template'], 'filter', 'filter' => 'trim'],
+            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images', 'skip_first_line'], 'boolean'],
+            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images', 'skip_first_line'], 'filter', 'filter' => function ($value) {
+            	return (boolean) $value;
+            }],
             [['template'], 'string', 'max' => 64],
 
             [['csv_file'], 'file', 'checkExtensionByMimeType' => false, 'skipOnEmpty' => true, 'extensions' => 'csv', 'maxFiles' => 1, 'mimeTypes' => 'text/plain'],
@@ -106,118 +129,162 @@ class VideosImport extends \yii\base\Model
 	public function save()
 	{
 		$this->csv_file = UploadedFile::getInstanceByName('csv_file');
-		if (in_array('categories_ids', $this->fields)) {
-			$this->categories = Category::find()
-				->indexBy('category_id')
-				->all();
-		} else {
-			$this->categories = Category::find()
-				->indexBy('title')
-				->all();
-		}
 
-		if ($this->validate()) {
+        if ($this->validate()) {
 
-				// Если загружен файл, читаем с него.
-			if ($this->csv_file instanceof UploadedFile) {
-				$filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
-				$this->csv_file->saveAs($filepath);
-
-				$file = new SplFileObject($filepath);
-				$file->setFlags(SplFileObject::READ_CSV|SplFileObject::READ_AHEAD|SplFileObject::SKIP_EMPTY|SplFileObject::DROP_NEW_LINE);
-				$file->setCsvControl($this->delimiter, $this->enclosure);
-
-				foreach ($file as $csvParsedString) {
-
-					$newVideo = [];
-					foreach ($this->fields as $key => $field) {
-						if (isset($csvParsedString[$key]) && $field !== 'skip') {
-							$newVideo[$field] = trim($csvParsedString[$key]);
-						}
-					}
-
-					if (empty($newVideo)) {
-						continue;
-					}
-
-					if ($this->insertVideo($newVideo)) {
-						$this->imported_rows_num ++;
-					}
-				}
-
-				@unlink($filepath);
-
-				// Если файла нет, но загружено через текстовое поле, то будем читать с него.
-			} elseif (!empty($this->csv_rows) || $this->csv_rows !== '') {
-
-				$rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
-
-				foreach ($rows as $row) {
-					$row = trim($row, " \t\n\r\0\x0B");
-
-					$csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
-
-					$newVideo = [];
-					foreach ($this->fields as $key => $field) {
-						if (isset($csvParsedString[$key]) && $field !== 'skip') {
-							$newVideo[$field] = trim($csvParsedString[$key]);
-						}
-					}
-
-					if (empty($newVideo)) {
-						continue;
-					}
-
-					if ($this->insertVideo($newVideo)) {
-						$this->imported_rows_num ++;
-					}
-				}
+				// Если категории заданы по ид, то у них приоритет и добавляться категории будут через иды.
+			if (in_array('categories_ids', $this->fields)) {
+				$this->categories = Category::find()
+					->indexBy('category_id')
+					->all();
+			} else {
+				$this->categories = Category::find()
+					->indexBy('title')
+					->all();
 			}
 
-			return true;
+				// Если загружен файл, читаем с него.
+            if ($this->csv_file instanceof UploadedFile) {
+            	$this->parseCsvFromFile();
+
+                // Если файла нет, но загружено через текстовое поле, то будем читать с него.
+            } elseif (!empty($this->csv_rows)) {
+                $this->parseCsvFromText();
+            }
+
+            return true;
+        }
+
+			// удалим временный файл, если было загружено через него.
+		if ($this->csv_file instanceof UploadedFile) {
+			@unlink($this->csv_file->tempName);
 		}
 
 		return false;
 	}
+    /**
+     * Разбор CSV из файла.
+     */
+    protected function parseCsvFromFile()
+    {
+        $fieldsNum = count($this->fields);
 
+        $filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
+        $this->csv_file->saveAs($filepath);
+
+        $file = new SplFileObject($filepath);
+        $file->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+        $file->setCsvControl($this->delimiter, $this->enclosure);
+
+    	$startLine = 0;
+    	if (true === $this->skip_first_line) {
+			$startLine = 1;
+    	}
+
+        $iterator = new LimitIterator($file, $startLine);
+
+        foreach ($iterator as $lineNumber => $csvParsedString) {
+        		// Совпадает ли количество заданных полей с количеством элементов в CSV строке
+        	if ($fieldsNum !== count($csvParsedString)) {
+        		$row = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        		continue;
+        	}
+
+            $newItem = [];
+            foreach ($this->fields as $key => $field) {
+                if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                    $newItem[$field] = trim($csvParsedString[$key]);
+                }
+            }
+
+            if (empty($newItem)) {
+                continue;
+            }
+
+            if (true === $this->insertItem($newItem)) {
+                $this->imported_rows_num ++;
+            } else {
+				$this->not_inserted_rows[] = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
+            }
+        }
+
+        @unlink($filepath);
+    }
+    /**
+     * Разбор CSV из текстовой формы (textarea)
+     */
+    protected function parseCsvFromText()
+    {
+        $fieldsNum = count($this->fields);
+
+        $rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
+        $arrayIterator = new ArrayIterator($rows);
+    	$startLine = 0;
+
+    	if (true === $this->skip_first_line) {
+			$startLine = 1;
+    	}
+
+        $iterator = new LimitIterator($arrayIterator, $startLine);
+
+        foreach ($iterator as $row) {
+            $row = trim($row, " \t\n\r\0\x0B");
+
+            $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
+				// Совпадает ли количество заданных полей с количеством элементов в CSV строке
+        	if ($fieldsNum !== count($csvParsedString)) {
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        		continue;
+        	}
+
+            $newItem = [];
+            foreach ($this->fields as $key => $field) {
+                if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                    $newItem[$field] = trim($csvParsedString[$key]);
+                }
+            }
+
+            if (empty($newItem)) {
+                continue;
+            }
+
+            if (true === $this->insertItem($newItem)) {
+                $this->imported_rows_num ++;
+            } else {
+            	$this->not_inserted_rows[] = $row;
+            }
+        }
+    }
 	/**
 	 * Осуществляет вставку видео. Если видео уже существут в базе (проверяется по source_url и embed), то вставка просто игнорируется.
 	 *
 	 * @param array $newVideo массив с данными для вставки нового видео.
-	 *
 	 * @return boolean была ли произведена вставка
 	 */
-	protected function insertVideo($newVideo)
+	protected function insertItem($newVideo)
 	{
 			// Ищем, существует ли видео по иду.
-		if (isset($newVideo['video_id'])) {
-			$video = Video::find()
-				->where(['video_id' => $newVideo['video_id']])
-				->one();
+		if (!empty($newVideo['video_id'])) {
+			$video = VideoFinder::findById((int) $newVideo['video_id']);
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['video_id']} дубликат идентификатора");
 				return false;
 			}
 		}
-
 			// Ищем, существует ли видео по урлу источника.
-		if ($this->skip_duplicate_urls == 1 && isset($newVideo['source_url']) && $newVideo['source_url'] !== '') {
-			$video = Video::find()
-				->where(['source_url' => $newVideo['source_url']])
-				->one();
+		if (true === $this->skip_duplicate_urls && !empty($newVideo['source_url'])) {
+			$video = VideoFinder::findBySourceUrl((string) $newVideo['source_url']);
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат урла источника");
 				return false;
 			}
 		}
-
 			// Ищем, существует ли видео по embed коду.
-		if ($this->skip_duplicate_embeds == 1 && isset($newVideo['embed'])) {
-			$video = Video::find()
-				->where(['embed' => $newVideo['embed']])
-				->one();
+		if (true === $this->skip_duplicate_embeds && !empty($newVideo['embed'])) {
+			$video = VideoFinder::findByEmbedCode($newVideo['embed']);
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['embed']} дубликат embed кода");
@@ -225,24 +292,24 @@ class VideosImport extends \yii\base\Model
 			}
 		}
 
-			// Если ничего не нашлось, будем вставлять новый.
+			// Если ничего не нашлось, вставляем новый.
 		$video = new Video();
 
 			// Если у видео есть категории, вынесем их в отдельный массив.
 		$videoCategories = [];
-		if (isset($newVideo['categories_ids']) && $newVideo['categories_ids'] !== '') {
+		if (!empty($newVideo['categories_ids'])) {
 			$videoCategories = explode(',', $newVideo['categories_ids']);
 			unset($newVideo['categories_ids']);
 
 			// Или категории по названиям.
-		} elseif (isset($newVideo['categories']) && $newVideo['categories'] !== '') {
+		} elseif (!empty($newVideo['categories'])) {
 			$videoCategories = explode(',', $newVideo['categories']);
 			unset($newVideo['categories']);
 		}
 
 			// Если у видео есть скриншоты, вынесем их в отдельный массив.
 		$videoScreenshots = [];
-		if (isset($newVideo['images']) && $newVideo['images'] !== '') {
+		if (!empty($newVideo['images'])) {
 			$videoScreenshots = explode(',', $newVideo['images']);
 			unset($newVideo['images']);
 		}
@@ -250,8 +317,7 @@ class VideosImport extends \yii\base\Model
 
 		$video->attributes = $newVideo;
 
-		if (empty($newVideo['slug']) || $newVideo['slug'] === '') {
-			//$video->slug = URLify::filter($newVideo['title']);
+		if (empty($newVideo['slug'])) {
 			$slug = \URLify::filter($newVideo['title']);
 		} else {
 			$slug = trim($newVideo['slug']);
@@ -260,33 +326,37 @@ class VideosImport extends \yii\base\Model
 		$video->slug = $this->generateSlug($slug);
 
 			// Шаблон для ролика
-		if ($this->template !== '') {
+		if (!empty($this->template)) {
 			$video->template = $this->template;
 		}
 
-		$video->updated_at = gmdate('Y:m:d H:i:s');
-		$video->created_at = gmdate('Y:m:d H:i:s');
+		$currentTime = gmdate('Y:m:d H:i:s');
+		$video->updated_at = $currentTime;
+		$video->created_at = $currentTime;
 
 		if (!$video->save(true)) {
-			$this->addError('csv_rows', "{$newVideo['title']} не сохранился, возможно фейл с параметрами");
-			return false;
+            $validateErrors = [];
+			$validateErrors[$video->title] = call_user_func_array('array_merge', $video->getErrors());
+            $this->addError('csv_rows', $validateErrors);
+
+            return false;
 		}
 
 		$categories = [];
-		if (!(empty($videoCategories))) {
+		if (!empty($videoCategories)) {
 
 			foreach ($videoCategories as $videoCategory) {
 				$categoryTitle = trim(strip_tags($videoCategory));
 					// Если категории не существует и флажок "не создавать новые" выключен, добавим категорию.
-				if (!isset($this->categories[$categoryTitle]) && $this->skip_new_categories == false) {
+				if (empty($this->categories[$categoryTitle]) && $this->skip_new_categories === false) {
 					$category = new Category();
 
 					$category->title = $categoryTitle;
 					$category->slug = \URLify::filter($categoryTitle);
 					$category->meta_title = $categoryTitle;
 					$category->h1 = $categoryTitle;
-					$category->updated_at = gmdate('Y:m:d H:i:s');
-					$category->created_at = gmdate('Y:m:d H:i:s');
+					$category->updated_at = $currentTime;
+					$category->created_at = $currentTime;
 					$category->save();
 
 					$this->categories[$categoryTitle] = $category;
@@ -299,7 +369,7 @@ class VideosImport extends \yii\base\Model
 		}
 
 		$screenshots = [];
-		if (!(empty($videoScreenshots))) {
+		if (!empty($videoScreenshots)) {
 
 			foreach ($videoScreenshots as $key => $videoScreenshot) {
 				$screenshot = new Image();
@@ -307,9 +377,9 @@ class VideosImport extends \yii\base\Model
 				$screenshot->video_id = $video->video_id;
 				$screenshot->position = $key;
 				$screenshot->source_url = trim($videoScreenshot);
-				$screenshot->created_at = gmdate('Y:m:d H:i:s');
+				$screenshot->created_at = $currentTime;
 
-				if ($this->external_images == 1) {
+				if (true === $this->external_images) {
 					$screenshot->status = 10;
 					$screenshot->filepath = trim($videoScreenshot);
 				} else {
@@ -325,30 +395,30 @@ class VideosImport extends \yii\base\Model
 			}
 		}
 
+			// В таблицу для ротации
 		if (!empty($categories) && !empty($screenshots)) {
-
 			foreach ($categories as $category) {
 				foreach ($screenshots as $sKey => $screenshot) {
-					$videoStats = RotationStats::find()
+					$rotationStats = RotationStats::find()
 						->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
 						->one();
 
-					if ($videoStats instanceof RotationStats)
+					if ($rotationStats instanceof RotationStats)
 						continue;
 
-					$videoStats = new RotationStats();
+					$rotationStats = new RotationStats();
 
-					$videoStats->video_id = $video->video_id;
-					$videoStats->category_id = $category->category_id;
-					$videoStats->image_id = $screenshot->image_id;
-					$videoStats->published_at = $video->published_at;
-					$videoStats->duration = (int) $video->duration;
+					$rotationStats->video_id = $video->video_id;
+					$rotationStats->category_id = $category->category_id;
+					$rotationStats->image_id = $screenshot->image_id;
+					$rotationStats->published_at = $video->published_at;
+					$rotationStats->duration = (int) $video->duration;
 
 					if ($sKey === 0) {
-						$videoStats->best_image = 1;
+						$rotationStats->best_image = 1;
 					}
 
-					$videoStats->save();
+					$rotationStats->save();
 				}
 			}
 		}

@@ -29,8 +29,8 @@ class CategoriesController extends Controller
     {
         parent::init();
         	// Инжект request и response
-        $this->request = Instance::ensure($this->request, Request::className());
-        $this->response = Instance::ensure($this->response, Response::className());
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response = Instance::ensure($this->response, Response::class);
     }
 
     /**
@@ -40,7 +40,7 @@ class CategoriesController extends Controller
     {
         return [
 			'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -52,14 +52,14 @@ class CategoriesController extends Controller
                ],
 			],
 			'verbs' => [
-				'class' => VerbFilter::className(),
+				'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                     'save-order' => ['POST'],
                 ],
             ],
 	        'contentNegotiator' => [
-	            'class' => ContentNegotiator::className(),
+	            'class' => ContentNegotiator::class,
 	            'only' => ['save-order'],
 	            'formats' => [
 	                'application/json' => Response::FORMAT_JSON,

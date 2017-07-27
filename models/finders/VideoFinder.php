@@ -60,6 +60,29 @@ class VideoFinder extends Model
         return Model::scenarios();
     }
 
+	public static function find()
+	{
+		return Video::find();
+	}
+	public static function findById($id)
+	{
+		return self::find()
+			->where(['video_id' => $id)
+			->one();
+	}
+	public static function findBySourceUrl($source_url)
+	{
+		return self::find()
+			->where(['source_url' => $source_url])
+			->one();
+	}
+	public static function findByEmbedCode($embed_code)
+	{
+		return self::find()
+			->where(['embed' => $embed_code])
+			->one();
+	}
+
     /**
      * Получает ролики постранично в разделе "все", отсортированные по дате.
      */

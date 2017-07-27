@@ -113,7 +113,12 @@ $this->params['breadcrumbs'][] = 'Видео';
 							</div>
 
 							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['name' => 'skip_duplicate_urls', 'label' => false]) ?> <span>Пропускать видео с повторяющимися URL-ами источника</span></label>
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['name' => 'skip_first_line', 'label' => false]) ?> <span>Пропустить первую строчку</span></label>
+								<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
+							</div>
+
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['name' => 'skip_duplicate_urls', 'label' => false]) ?> <span>Пропускать видео с повторяющимися URL-ами источника</span></label><br>
 								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['name' => 'skip_duplicate_embeds', 'label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
 							</div>
 							<div class="col-md-12 form-group">
