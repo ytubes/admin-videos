@@ -54,7 +54,7 @@ class ImportFeed extends \yii\db\ActiveRecord
 		$this->delimiter = '|';
 		$this->enclosure = '"';
 		$this->fields = ['skip'];
-		$this->skip_first_line = true; // ALTER TABLE `videos_import_feeds` ADD `skip_first_line` TINYINT(1) NOT NULL DEFAULT '1' AFTER `fields`;
+		$this->skip_first_line = true;
 		$this->skip_duplicate_urls = true;
 		$this->skip_duplicate_embeds = true;
 		$this->skip_new_categories = true;

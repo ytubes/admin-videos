@@ -67,7 +67,7 @@ class VideosImport extends \yii\base\Model
     /**
      * @var array $option опции для тега select, отвечающего за набор полей csv
      */
-    protected $options;
+    protected $options = [];
     /**
      * @var array $not_inserted_rows забракованные строчки из CSV
      */
@@ -79,7 +79,7 @@ class VideosImport extends \yii\base\Model
 	/**
      * @var array $preset_options опции для select тега (выбор фидов вставки)
      */
-    protected $preset_options;
+    protected $preset_options = [];
 
 	public function __construct(ImportFeed $importFeed, $config = [])
 	{
@@ -101,6 +101,8 @@ class VideosImport extends \yii\base\Model
         	Yii::$app->log->targets['file']->enabled = false;
         }
 	}
+// добавить вывод ошибок.
+// добавить вывод видео идов невставленных
 
     /**
      * @inheritdoc
@@ -427,18 +429,6 @@ class VideosImport extends \yii\base\Model
 
 		return true;
 	}
-
-	/**
-	 * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
-	 *
-	 * В случае перезаписи назначает новые параметры исходя из данных файла.
-	 *
-	 * @return boolean было ли произведено обновление или вставка
-	 */
-	protected function insertCategory($newCategory)
-	{
-	}
-
 	/**
 	 * Генерирует slug исходя из title. Также присоединяет численный суффикс, если слаг не уникален.
 	 *
@@ -459,9 +449,8 @@ class VideosImport extends \yii\base\Model
 			return $new_slug;
 		}
 	}
-
 	/**
-	 * Проверяет является ли slug уникальным. Верент true, если уникален.
+	 * Проверяет является ли slug уникальным. Вернет true, если уникален.
 	 *
 	 * @param string $slug
 	 * @return bool
@@ -475,7 +464,6 @@ class VideosImport extends \yii\base\Model
 
 		return false === $id;
 	}
-
 	/**
 	 * @return array
 	 */
