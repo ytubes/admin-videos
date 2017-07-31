@@ -67,7 +67,7 @@ class VideoFinder extends Model
 	public static function findById($id)
 	{
 		return self::find()
-			->where(['video_id' => $id)
+			->where(['video_id' => $id])
 			->one();
 	}
 	public static function findBySourceUrl($source_url)

@@ -20,6 +20,87 @@ $this->params['breadcrumbs'][] = 'Видео';
 	<div class="row">
 		<div class="col-md-12">
 
+		<?php if ($model->hasErrors('csv_rows')): ?>
+			<div class="box box-danger collapsed-box">
+				<div class="box-header with-border">
+					<h3 class="box-title">Ошибки</h3>
+
+					<div class="box-tools pull-right">
+						<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+			            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+			        </div>
+				</div>
+			            <!-- /.box-header -->
+				<div class="box-body" style="display: none;">
+					<div class="alert alert-danger alert-dismissible">
+						<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+						<h4><i class="icon fa fa-exclamation-circle"></i> Следующие записи не были добавлены: </h4>
+						<ul>
+						<?php foreach ($model->getErrors('csv_rows') as $error): ?>
+							<li><?= $error ?></li>
+						<?php endforeach ?>
+						</ul>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($model->hasNotInsertedRows()): ?>
+			<?php $numNotInsertedRows = count($model->getNotInsertedRows()) ?>
+			<div class="box box-danger collapsed-box">
+				<div class="box-header with-border">
+					<h3 class="box-title">Не вставленные строки</h3>
+
+					<div class="box-tools pull-right">
+						<span data-toggle="tooltip" title="" class="badge bg-red" data-original-title="<?= $numNotInsertedRows ?> строки"><?= $numNotInsertedRows ?></span>
+						<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+			            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+			        </div>
+				</div>
+			            <!-- /.box-header -->
+				<div class="box-body" style="display: none;">
+					<div class="row">
+						<div class="col-md-12 form-group">
+							<?= Html::textarea('csv_not_inserted_rows', implode(PHP_EOL, $model->getNotInsertedRows()), [
+									'id' => 'csv-not-inserted-rows',
+									'class' => 'form-control csv-not-inserted-rows',
+									'rows' => 12
+								]
+							) ?>
+						</div>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($model->hasNotInsertedIds()): ?>
+			<?php $numNotInsertedIds = count($model->getNotInsertedIds()) ?>
+			<div class="box box-danger collapsed-box">
+				<div class="box-header with-border">
+					<h3 class="box-title">Не вставленные иды</h3>
+
+					<div class="box-tools pull-right">
+						<span data-toggle="tooltip" title="" class="badge bg-red" data-original-title="<?= $numNotInsertedIds ?> строки"><?= $numNotInsertedIds ?></span>
+						<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+			            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+			        </div>
+				</div>
+			            <!-- /.box-header -->
+				<div class="box-body" style="display: none;">
+					<div class="row">
+						<div class="col-md-12 form-group">
+							<?= Html::textarea('csv_not_inserted_ids', implode(',', $model->getNotInsertedIds()), [
+									'id' => 'csv-not-inserted-ids',
+									'class' => 'form-control csv-not-inserted-rows',
+									'rows' => 12
+								]
+							) ?>
+						</div>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
+
 			<div class="box box-primary">
 				<div class="box-header with-border">
 					<i class="glyphicon glyphicon-import"></i><h3 class="box-title">Импорт видео</h3>
@@ -58,17 +139,6 @@ $this->params['breadcrumbs'][] = 'Видео';
 				<?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
 
 		            <div class="box-body pad">
-						<?php if ($model->hasErrors('csv_rows')): ?>
-							<div class="alert alert-danger alert-dismissible">
-								<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-								<h4><i class="icon fa fa-exclamation-circle"></i> Следующие записи не были добавлены: </h4>
-								<ul>
-								<?php foreach ($model->getErrors('csv_rows') as $error): ?>
-									<li><?= $error ?></li>
-								<?php endforeach ?>
-								</ul>
-							</div>
-						<?php endif; ?>
 
 						<h4>Настройки ввода</h4>
 						<div class="row">
@@ -118,7 +188,7 @@ $this->params['breadcrumbs'][] = 'Видео';
 							</div>
 
 							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['name' => 'skip_duplicate_urls', 'label' => false]) ?> <span>Пропускать видео с повторяющимися URL-ами источника</span></label><br>
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['name' => 'skip_duplicate_urls', 'label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
 								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['name' => 'skip_duplicate_embeds', 'label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
 							</div>
 							<div class="col-md-12 form-group">

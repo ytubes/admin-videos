@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 							</div>
 
 							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися URL-ами источника</span></label><br>
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
 								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
 							</div>
 							<div class="col-md-12 form-group">

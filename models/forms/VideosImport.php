@@ -3,6 +3,8 @@ namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
+use ArrayIterator;
+use LimitIterator;
 use yii\base\InvalidParamException;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
@@ -85,6 +87,8 @@ class VideosImport extends \yii\base\Model
 	{
 		parent::__construct($config);
 
+		set_time_limit(0);
+
 		$this->attributes = $importFeed->getAttributes();
 		$this->options = $importFeed->getFieldsOptions();
 
@@ -111,7 +115,7 @@ class VideosImport extends \yii\base\Model
     {
         return [
             [['delimiter', 'fields'], 'required'],
-            ['fields', 'each', 'rule' => ['in', 'range' => array_keys($this->options)], 'skipOnEmpty' => false],
+            ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
             [['delimiter', 'enclosure', 'csv_rows'], 'string'],
             [['delimiter', 'enclosure', 'csv_rows', 'template'], 'filter', 'filter' => 'trim'],
             [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images', 'skip_first_line'], 'boolean'],
@@ -133,7 +137,6 @@ class VideosImport extends \yii\base\Model
 		$this->csv_file = UploadedFile::getInstanceByName('csv_file');
 
         if ($this->validate()) {
-
 				// Если категории заданы по ид, то у них приоритет и добавляться категории будут через иды.
 			if (in_array('categories_ids', $this->fields)) {
 				$this->categories = Category::find()
@@ -187,9 +190,10 @@ class VideosImport extends \yii\base\Model
 
         foreach ($iterator as $lineNumber => $csvParsedString) {
         		// Совпадает ли количество заданных полей с количеством элементов в CSV строке
-        	if ($fieldsNum !== count($csvParsedString)) {
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
         		$row = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
-        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
         		continue;
         	}
 
@@ -234,9 +238,11 @@ class VideosImport extends \yii\base\Model
             $row = trim($row, " \t\n\r\0\x0B");
 
             $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
+
 				// Совпадает ли количество заданных полей с количеством элементов в CSV строке
-        	if ($fieldsNum !== count($csvParsedString)) {
-        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
         		continue;
         	}
 
@@ -272,6 +278,10 @@ class VideosImport extends \yii\base\Model
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['video_id']} дубликат идентификатора");
+
+				if (isset($newVideo['video_id']))
+					$this->not_inserted_ids[] = $newVideo['video_id'];
+
 				return false;
 			}
 		}
@@ -281,6 +291,10 @@ class VideosImport extends \yii\base\Model
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['source_url']} дубликат урла источника");
+
+				if (isset($newVideo['video_id']))
+					$this->not_inserted_ids[] = $newVideo['video_id'];
+
 				return false;
 			}
 		}
@@ -290,6 +304,10 @@ class VideosImport extends \yii\base\Model
 
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['embed']} дубликат embed кода");
+
+				if (isset($newVideo['video_id']))
+					$this->not_inserted_ids[] = $newVideo['video_id'];
+
 				return false;
 			}
 		}
@@ -316,16 +334,10 @@ class VideosImport extends \yii\base\Model
 			unset($newVideo['images']);
 		}
 
-
 		$video->attributes = $newVideo;
 
-		if (empty($newVideo['slug'])) {
-			$slug = \URLify::filter($newVideo['title']);
-		} else {
-			$slug = trim($newVideo['slug']);
-		}
-
-		$video->slug = $this->generateSlug($slug);
+        $slug = empty($newVideo['slug']) ? $newVideo['title'] : $newVideo['slug'];
+        $video->generateSlug($slug);
 
 			// Шаблон для ролика
 		if (!empty($this->template)) {
@@ -340,6 +352,9 @@ class VideosImport extends \yii\base\Model
             $validateErrors = [];
 			$validateErrors[$video->title] = call_user_func_array('array_merge', $video->getErrors());
             $this->addError('csv_rows', $validateErrors);
+
+				if (isset($newVideo['video_id']))
+					$this->not_inserted_ids[] = $newVideo['video_id'];
 
             return false;
 		}
@@ -429,41 +444,49 @@ class VideosImport extends \yii\base\Model
 
 		return true;
 	}
-	/**
-	 * Генерирует slug исходя из title. Также присоединяет численный суффикс, если слаг не уникален.
+    /**
+	 * Собирает CSV строчку из массива.
 	 *
-	 * @param string $title
+	 * @param array $input
+	 * @param string $delimiter
+	 * @param string $enclosure
 	 * @return string
 	 */
-	private function generateSlug($title)
-	{
-		$slug = \URLify::filter($title);
-
-		if (!$slug)
-			$slug = 'default-video';
-
-		if ($this->checkUniqueSlug($slug)) {
-			return $slug;
-		} else {
-			for ($suffix = 1; !$this->checkUniqueSlug($new_slug = $slug . '-' . $suffix); $suffix++ ) {}
-			return $new_slug;
-		}
+    protected function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $input, $delimiter, $enclosure);
+        rewind($fp);
+        $data = fread($fp, 1048576);
+        fclose($fp);
+        return rtrim($data, "\n");
+    }
+    /**
+     * @inheritdoc
+     */
+	public function hasNotInsertedRows() {
+		return !empty($this->not_inserted_rows);
 	}
-	/**
-	 * Проверяет является ли slug уникальным. Вернет true, если уникален.
-	 *
-	 * @param string $slug
-	 * @return bool
-	 */
-	private function checkUniqueSlug($slug)
-	{
-		$sql = "SELECT `video_id` FROM `" . Video::tableName() . "` WHERE `slug`='{$slug}'";
-
-		$id = Video::getDb()->createCommand($sql)
-           ->queryOne();
-
-		return false === $id;
+    /**
+     * @inheritdoc
+     */
+    public function getNotInsertedRows()
+    {
+    	return $this->not_inserted_rows;
+    }
+    /**
+     * @inheritdoc
+     */
+	public function hasNotInsertedIds() {
+		return !empty($this->not_inserted_ids);
 	}
+    /**
+     * @inheritdoc
+     */
+    public function getNotInsertedIds()
+    {
+    	return $this->not_inserted_ids;
+    }
 	/**
 	 * @return array
 	 */
@@ -471,7 +494,6 @@ class VideosImport extends \yii\base\Model
 	{
 		return $this->options;
 	}
-
 	/**
 	 * @return array
 	 */

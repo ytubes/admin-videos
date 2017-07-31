@@ -139,9 +139,10 @@ class CategoriesImport extends Model
 
         foreach ($iterator as $lineNumber => $csvParsedString) {
         		// Совпадает ли количество заданных полей с количеством элементов в CSV строке
-        	if ($fieldsNum !== count($csvParsedString)) {
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
         		$row = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
-        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
         		continue;
         	}
 
@@ -187,8 +188,9 @@ class CategoriesImport extends Model
 
             $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
 				// Совпадает ли количество заданных полей с количеством элементов в CSV строке
-        	if ($fieldsNum !== count($csvParsedString)) {
-        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации полей");
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
         		continue;
         	}
 
@@ -260,9 +262,8 @@ class CategoriesImport extends Model
 
         $category->attributes = $newCategory;
 
-        if (empty($newCategory['slug'])) {
-            $category->slug = \URLify::filter($newCategory['title']);
-        }
+        $slug = empty($newCategory['slug']) ? $newCategory['title'] : $newCategory['slug'];
+        $category->generateSlug($slug);
 
         $currentTime = gmdate('Y-m-d H:i:s');
         if ($category->isNewRecord) {
