@@ -1,6 +1,5 @@
 <?php
-
-namespace ytubes\admin\videos;
+namespace ytubes\videos\admin;
 
 use Yii;
 
@@ -20,12 +19,12 @@ class Module extends \ytubes\components\Module
     /**
      * @inheritdoc
      */
-    public $controllerNamespace = 'ytubes\admin\videos\controllers';
+    public $controllerNamespace = 'ytubes\videos\admin\controllers';
 
     /**
      * @inheritdoc
      */
-    public $defaultRoute = 'main';
+    public $defaultRoute = 'index/index';
 
     /**
      * @inheritdoc

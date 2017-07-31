@@ -1,26 +1,33 @@
 <?php
-
-namespace ytubes\admin\videos\controllers;
+namespace ytubes\videos\admin\controllers;
 
 use Yii;
-
-use yii\filters\VerbFilter;
+use yii\di\Instance;
 use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 use yii\filters\ContentNegotiator;
-
-use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
+use yii\web\Controller;
+use yii\web\Request;
+use yii\web\Response;
 
-
-use ytubes\admin\videos\models\VideosCategories;
-use ytubes\admin\videos\models\forms\CategoriesImport;
-use ytubes\admin\videos\models\forms\Tools;
+use ytubes\videos\admin\models\forms\Tools;
 
 /**
- * ToolsController implements the CRUD actions for Tools model.
+ * ToolsController это всякие инструменты.
  */
-class ToolsController extends \yii\web\Controller
+class ToolsController extends Controller
 {
+    public $request = 'request';
+    public $response = 'response';
+
+    public function init()
+    {
+        parent::init();
+        	// Инжект request и response
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response =Instance::ensure($this->response, Response::class);
+    }
     /**
      * @inheritdoc
      */
@@ -28,7 +35,7 @@ class ToolsController extends \yii\web\Controller
     {
         return [
 	       'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -40,7 +47,7 @@ class ToolsController extends \yii\web\Controller
                ],
 	       ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                     'clear-stats' => ['POST'],
@@ -49,11 +56,11 @@ class ToolsController extends \yii\web\Controller
                 ],
             ],
 	        'contentNegotiator' => [
-	            'class' => ContentNegotiator::className(),
+	            'class' => ContentNegotiator::class,
 	            'only' => ['clear-stats', 'random-date', 'clear-videos'],
 	            'formatParam' => '_format',
 	            'formats' => [
-	                'application/json' => \yii\web\Response::FORMAT_JSON,
+	                'application/json' => Response::FORMAT_JSON,
 	            ],
 	        ],
         ];
@@ -73,16 +80,14 @@ class ToolsController extends \yii\web\Controller
     }
 
     /**
-     * Creates a new VideosCategories model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
+     * Очищает статистику по видео (показы, просмотры и т.д.)
      * @return mixed
      */
     public function actionClearStats()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->clearStats()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->clearStats()) {
             return ['success' => true];
         } else {
             return ['success' => false];
@@ -96,10 +101,9 @@ class ToolsController extends \yii\web\Controller
      */
     public function actionRandomDate()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->randomDate()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->randomDate()) {
             return ['success' => true];
         } else {
             return ['success' => false];
@@ -113,10 +117,9 @@ class ToolsController extends \yii\web\Controller
      */
     public function actionClearVideos()
     {
-        $request = Yii::$app->getRequest();
         $model = new Tools();
 
-        if ($model->load([$model->formName() => $request->post()]) && $model->clearVideos()) {
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->clearVideos()) {
             return ['success' => true];
         } else {
             return ['success' => false];

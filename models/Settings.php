@@ -1,6 +1,5 @@
 <?php
-
-namespace ytubes\admin\videos\models;
+namespace ytubes\videos\admin\models;
 
 use Yii;
 

@@ -1,33 +1,33 @@
 <?php
-
-namespace ytubes\admin\videos\models\forms;
+namespace ytubes\videos\admin\models\forms;
 
 use Yii;
 use SplFileObject;
-
-use yii\base\InvalidParamException;
-
+use ArrayIterator;
+use LimitIterator;
+use yii\base\Model;
 use yii\web\UploadedFile;
-use yii\web\NotFoundHttpException;
-
-use yii\helpers\FileHelper;
 use yii\helpers\StringHelper;
 
-use ytubes\admin\videos\models\VideosCategories;
+use ytubes\videos\admin\models\finders\CategoryFinder;
+use ytubes\videos\models\Category;
 
 /**
  * Модель для обработки формы импорта категорий через цсв файлы или просто текст.
  */
-class CategoriesImport extends \yii\base\Model
+class CategoriesImport extends Model
 {
     public $delimiter;
     public $enclosure;
     public $fields;
+    public $skip_first_line;
 
     public $csv_rows;
     public $csv_file;
 
     public $update_category;
+
+	protected $not_inserted_rows = [];
 
     protected $model;
     /**
@@ -59,6 +59,11 @@ class CategoriesImport extends \yii\base\Model
         $this->enclosure = '"';
         $this->fields = ['skip'];
         $this->update_category = false;
+        $this->skip_first_line = true;
+        	// Отключить логи
+        if (Yii::$app->hasModule('log') && is_object(Yii::$app->log->targets['file'])) {
+        	Yii::$app->log->targets['file']->enabled = false;
+        }
     }
 
     /**
@@ -68,11 +73,15 @@ class CategoriesImport extends \yii\base\Model
     {
         return [
             [['delimiter', 'fields'], 'required'],
-            ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
+            ['fields', 'each', 'rule' => ['in', 'range' => array_keys($this->options)], 'skipOnEmpty' => false],
             [['delimiter', 'enclosure', 'csv_rows'], 'filter', 'filter' => 'trim'],
             [['delimiter', 'enclosure', 'csv_rows'], 'string'],
-            [['update_category'], 'boolean'],
+            [['update_category', 'skip_first_line'], 'boolean'],
+            [['update_category', 'skip_first_line'], 'filter', 'filter' => function ($value) {
+            	return (boolean) $value;
+            }],
             ['update_category', 'default', 'value' => false],
+            ['skip_first_line', 'default', 'value' => true],
 
             [['csv_file'], 'file', 'checkExtensionByMimeType' => false, 'skipOnEmpty' => true, 'extensions' => 'csv', 'maxFiles' => 1, 'mimeTypes' => 'text/plain'],
         ];
@@ -88,96 +97,153 @@ class CategoriesImport extends \yii\base\Model
 
         if ($this->validate()) {
 
-                // Если загружен файл, читаем с него.
+				// Если загружен файл, читаем с него.
             if ($this->csv_file instanceof UploadedFile) {
-                $filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
-                $this->csv_file->saveAs($filepath);
-
-                $file = new SplFileObject($filepath);
-                $file->setFlags(SplFileObject::READ_CSV|SplFileObject::READ_AHEAD|SplFileObject::SKIP_EMPTY|SplFileObject::DROP_NEW_LINE);
-                $file->setCsvControl($this->delimiter, $this->enclosure);
-
-                foreach ($file as $csvParsedString) {
-
-                    $newCategory = [];
-                    foreach ($this->fields as $key => $field) {
-                        if (isset($csvParsedString[$key]) && $field !== 'skip') {
-                            $newCategory[$field] = trim($csvParsedString[$key]);
-                        }
-                    }
-
-                    if (empty($newCategory)) {
-                        continue;
-                    }
-
-                    if ($this->insertCategory($newCategory)) {
-                        $this->imported_rows_num ++;
-                    }
-                }
-
-                @unlink($filepath);
+            	$this->parseCsvFromFile();
 
                 // Если файла нет, но загружено через текстовое поле, то будем читать с него.
-            } elseif (!empty($this->csv_rows) || $this->csv_rows !== '') {
-
-                $rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
-
-                foreach ($rows as $row) {
-                    $row = trim($row, " \t\n\r\0\x0B");
-
-                    $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
-
-                    $newCategory = [];
-                    foreach ($this->fields as $key => $field) {
-                        if (isset($csvParsedString[$key]) && $field !== 'skip') {
-                            $newCategory[$field] = trim($csvParsedString[$key]);
-                        }
-                    }
-
-                    if (empty($newCategory)) {
-                        continue;
-                    }
-
-                    if ($this->insertCategory($newCategory)) {
-                        $this->imported_rows_num ++;
-                    }
-                }
+            } elseif (!empty($this->csv_rows)) {
+                $this->parseCsvFromText();
             }
 
             return true;
         }
 
+			// удалим временный файл, если было загружено через него.
+		if ($this->csv_file instanceof UploadedFile) {
+			@unlink($this->csv_file->tempName);
+		}
+
         return false;
     }
+    /**
+     * Разбор CSV из файла.
+     */
+    protected function parseCsvFromFile()
+    {
+        $fieldsNum = count($this->fields);
 
+        $filepath = Yii::getAlias('@runtime/tmp/' . $this->csv_file->baseName . '.' . $this->csv_file->extension);
+        $this->csv_file->saveAs($filepath);
+
+        $file = new SplFileObject($filepath);
+        $file->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+        $file->setCsvControl($this->delimiter, $this->enclosure);
+
+    	$startLine = 0;
+    	if (true === $this->skip_first_line) {
+			$startLine = 1;
+    	}
+
+        $iterator = new LimitIterator($file, $startLine);
+
+        foreach ($iterator as $lineNumber => $csvParsedString) {
+        		// Совпадает ли количество заданных полей с количеством элементов в CSV строке
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
+        		$row = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
+        		continue;
+        	}
+
+            $newItem = [];
+            foreach ($this->fields as $key => $field) {
+                if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                    $newItem[$field] = trim($csvParsedString[$key]);
+                }
+            }
+
+            if (empty($newItem)) {
+                continue;
+            }
+
+            if (true === $this->insertItem($newItem)) {
+                $this->imported_rows_num ++;
+            } else {
+				$this->not_inserted_rows[] = $this->str_putcsv($csvParsedString, $this->delimiter, $this->enclosure);
+            }
+        }
+
+        @unlink($filepath);
+    }
+    /**
+     * Разбор CSV из текстовой формы (textarea)
+     */
+    protected function parseCsvFromText()
+    {
+        $fieldsNum = count($this->fields);
+
+        $rows = explode("\n", trim($this->csv_rows, " \t\n\r\0\x0B"));
+        $arrayIterator = new ArrayIterator($rows);
+    	$startLine = 0;
+
+    	if (true === $this->skip_first_line) {
+			$startLine = 1;
+    	}
+
+        $iterator = new LimitIterator($arrayIterator, $startLine);
+
+        foreach ($iterator as $row) {
+            $row = trim($row, " \t\n\r\0\x0B");
+
+            $csvParsedString = str_getcsv($row, $this->delimiter, $this->enclosure);
+				// Совпадает ли количество заданных полей с количеством элементов в CSV строке
+        	$elementsNum = count($csvParsedString);
+        	if ($fieldsNum !== $elementsNum) {
+        		$this->addError('csv_rows', "Строка <b class=\"text-dark-gray\">{$row}</b> не соответствует конфигурации колонок. Количество полей указано: {$fieldsNum}, фактическое количество колонок: {$elementsNum}");
+        		continue;
+        	}
+
+            $newItem = [];
+            foreach ($this->fields as $key => $field) {
+                if (isset($csvParsedString[$key]) && $field !== 'skip') {
+                    $newItem[$field] = trim($csvParsedString[$key]);
+                }
+            }
+
+            if (empty($newItem)) {
+                continue;
+            }
+
+            if (true === $this->insertItem($newItem)) {
+                $this->imported_rows_num ++;
+            } else {
+            	$this->not_inserted_rows[] = $row;
+            }
+        }
+    }
     /**
      * Осуществляет вставку категории. Если таковая уже существует (чек по тайтлу и иду) то проверяется флажок, перезаписывать или нет.
      * В случае перезаписи назначает новые параметры исходя из данных файла.
+     *
+     * @param array $newCategory Массив с данным для вставки новой категории
+     *
      * @return boolean было ли произведено обновление или вставка
      */
-    protected function insertCategory($newCategory)
+    protected function insertItem($newCategory)
     {
             // Ищем, существует ли категория.
-        if (isset($newCategory['category_id']) && $newCategory['category_id'] !== '') {
-            $category = VideosCategories::find()
-                ->where(['category_id' => $newCategory['category_id']])
-                ->one();
-        } elseif (isset($newCategory['title']) && $newCategory['title'] !== '') {
-            $category = VideosCategories::find()
-                ->where(['title' => $newCategory['title']])
-                ->one();
+        if (!empty($newCategory['category_id'])) {
+            $category = CategoryFinder::findById($newCategory['category_id']);
+        } elseif (!empty($newCategory['title'])) {
+            $category = CategoryFinder::findByTitle($newCategory['title']);
         } else {
-            $this->addError('csv_rows', "Требуется название или ID");
+            $this->addError('csv_rows', 'Требуется название или ID');
             return false;
         }
 
+        	// Если название все таки пустое, значит оно будет идом категории.
+        if (empty($newCategory['title'])) {
+        	$newCategory['title'] = $newCategory['category_id'];
+        }
+
             // Если ничего не нашлось, будем вставлять новый.
-        if (!($category instanceof VideosCategories)) {
-            $category = new VideosCategories();
+        if (!$category instanceof Category) {
+            $category = new Category();
         } else {
                 // Если переписывать не нужно существующую категорию, то просто проигнорировать ее.
-            if ($this->update_category == false) {
-                $this->addError('csv_rows', "{$category->title} дубликат");
+            if (false === $this->update_category) {
+                $this->addError('csv_rows', "<b>{$category->title}</b> дубликат");
                 return false;
             }
         }
@@ -196,41 +262,62 @@ class CategoriesImport extends \yii\base\Model
 
         $category->attributes = $newCategory;
 
-        if (empty($newCategory['slug']) || $newCategory['slug'] === '') {
-            $category->slug = \URLify::filter($newCategory['title']);
-        }
+        $slug = empty($newCategory['slug']) ? $newCategory['title'] : $newCategory['slug'];
+        $category->generateSlug($slug);
 
+        $currentTime = gmdate('Y-m-d H:i:s');
         if ($category->isNewRecord) {
-            $category->updated_at = gmdate('Y:m:d H:i:s');
-            $category->created_at = gmdate('Y:m:d H:i:s');
+            $category->updated_at = $currentTime;
+            $category->created_at = $currentTime;
         } else {
-            $category->updated_at = gmdate('Y:m:d H:i:s');
+            $category->updated_at = $currentTime;
         }
 
         if (!$category->save(true)) {
-            $attErrors = $category->getErrors();
-
-            $errorText = '<ul>';
-            foreach ($attErrors as $errors) {
-                foreach ($errors as $error) {
-                    $errorText .= '<li>' . $error . '</li>';
-                }
-            }
-            $errorText .= '</ul>';
-
-            $this->addError('csv_rows', "<b>{$category->title}</b> не сохранилось, причина: {$errorText}");
+            $validateErrors = [];
+			$validateErrors[$category->title] = call_user_func_array('array_merge', $category->getErrors());
+            $this->addError('csv_rows', $validateErrors);
 
             return false;
         }
 
         return true;
     }
-
     /**
-     * @return array
+	 * Собирает CSV строчку из массива.
+	 *
+	 * @param array $input
+	 * @param string $delimiter
+	 * @param string $enclosure
+	 * @return string
+	 */
+    protected function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+    {
+        $fp = fopen('php://temp', 'r+');
+        fputcsv($fp, $input, $delimiter, $enclosure);
+        rewind($fp);
+        $data = fread($fp, 1048576);
+        fclose($fp);
+        return rtrim($data, "\n");
+    }
+    /**
+     * @inheritdoc
+     */
+	public function hasNotInsertedRows() {
+		return !empty($this->not_inserted_rows);
+	}
+    /**
+     * @inheritdoc
+     */
+    public function getNotInsertedRows()
+    {
+    	return $this->not_inserted_rows;
+    }
+    /**
+     * @inheritdoc
      */
     public function getOptions()
     {
-        return $this->options;
+    	return $this->options;
     }
 }

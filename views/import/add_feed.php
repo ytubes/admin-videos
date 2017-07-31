@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 
 			<div class="box box-success">
 				<div class="box-header with-border">
-					<i class="fa  fa-file-o"></i><h3 class="box-title">Добавить настройку импорта видео</h3>
+					<i class="fa fa-file-o text-purple-disabled"></i><h3 class="box-title">Добавить настройку импорта видео</h3>
 	            </div>
 
 				<?php $form = ActiveForm::begin(); ?>
@@ -61,15 +61,28 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 							<?php endforeach; ?>
 						</div>
 
-					    <?= $form->field($model, 'skip_duplicate_urls')->checkbox() ?>
+						<div class="row">
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['label' => false]) ?> <span>Пропустить первую строчку</span></label>
+								<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
+							</div>
 
-					    <?= $form->field($model, 'skip_duplicate_embeds')->checkbox() ?>
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
+							</div>
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_new_categories', ['label' => false]) ?> <span>Запретить создание новых категорий</span></label>
+							</div>
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'external_images', ['label' => false]) ?> <span>Использовать внешние тумбы (не будут скачиваться и нарезаться)</span></label>
+							</div>
 
-					    <?= $form->field($model, 'skip_new_categories')->checkbox() ?>
-
-					    <?= $form->field($model, 'external_images')->checkbox() ?>
-
-					    <?= $form->field($model, 'template')->textInput(['maxlength' => true]) ?>
+							<div class="col-md-12 form-group">
+								<label class="control-label">Шаблон для ролика (по умолчанию используется view)</label>
+								<?= Html::activeInput('text', $model, 'template', ['class' => 'form-control', 'style' => 'width:200px']) ?>
+                			</div>
+						</div>
 
 					</div>
 

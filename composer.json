@@ -6,15 +6,12 @@
         "yiisoft/yii2": "~2.0.9",
         "yiisoft/yii2-jui": "~2.0.0",
         "ytubes/core": ">=0.0.1",
+        "ytubes/videos": "dev-master",
         "jbroadway/urlify": "^1.1"
     },
     "autoload": {
         "psr-4": {
-            "ytubes\\admin\\videos\\": ""
+            "ytubes\\videos\\admin\\": ""
         }
-    },
-    "scripts": {
-        "post-update-cmd": "echo \"yes\" | php yii migrate",
-        "post-install-cmd": "echo \"yes\" | php yii migrate"
     }
 }

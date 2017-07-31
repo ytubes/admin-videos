@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
 		<div class="col-md-9">
 			<div class="box box-primary">
 				<div class="box-header with-border">
-					<i class="fa fa-edit"></i><h3 class="box-title">хз че тут</h3>
+					<i class="fa fa-edit"></i><h3 class="box-title">Настройки видео</h3>
 	            </div>
 
 				<?php $form = ActiveForm::begin([

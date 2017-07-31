@@ -246,10 +246,10 @@ class m170610_174801_videos_init extends Migration
 
         if ($tableSchema !== null) {
             $this->batchInsert($tableName, ['module', 'handler_class', 'cron_expression', 'priority', 'enabled'], [
-                ['videos', '\ytubes\admin\videos\workers\RecalculateCTR', '*/2 * * * *', 0, 1],
-                ['videos', '\ytubes\admin\videos\workers\SwitchTestImage', '*/2 * * * *', 1, 1],
-                ['videos', '\ytubes\admin\videos\workers\ShiftCheckpoint', '*/2 * * * *', 2, 1],
-                ['videos', '\ytubes\admin\videos\workers\SetCategoriesThumbs', '*/5 * * * *', 3, 1],
+                ['videos', '\ytubes\videos\admin\cron\jobs\RecalculateCTR', '*/2 * * * *', 0, 1],
+                ['videos', '\ytubes\videos\admin\cron\jobs\SwitchTestImage', '*/2 * * * *', 1, 1],
+                ['videos', '\ytubes\videos\admin\cron\jobs\ShiftCheckpoint', '*/2 * * * *', 2, 1],
+                ['videos', '\ytubes\videos\admin\cron\jobs\SetCategoriesThumbs', '*/5 * * * *', 3, 1],
             ]);
         }
 

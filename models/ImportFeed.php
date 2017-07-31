@@ -1,5 +1,5 @@
 <?php
-namespace ytubes\admin\videos\models;
+namespace ytubes\videos\admin\models;
 
 use Yii;
 
@@ -54,6 +54,7 @@ class ImportFeed extends \yii\db\ActiveRecord
 		$this->delimiter = '|';
 		$this->enclosure = '"';
 		$this->fields = ['skip'];
+		$this->skip_first_line = true;
 		$this->skip_duplicate_urls = true;
 		$this->skip_duplicate_embeds = true;
 		$this->skip_new_categories = true;
@@ -72,7 +73,7 @@ class ImportFeed extends \yii\db\ActiveRecord
             [['name'], 'required'],
             [['name', 'description'], 'string', 'max' => 255],
             ['fields', 'each', 'rule' => ['string']],
-            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images'], 'integer'],
+            [['skip_duplicate_urls', 'skip_duplicate_embeds', 'skip_new_categories', 'external_images', 'skip_first_line'], 'boolean'],
             [['delimiter', 'enclosure'], 'string', 'max' => 16],
             [['template'], 'string', 'max' => 64],
         ];
@@ -89,6 +90,7 @@ class ImportFeed extends \yii\db\ActiveRecord
             'delimiter' => 'Delimiter',
             'enclosure' => 'Enclosure',
             'fields' => 'Fields',
+            'skip_first_line' => 'Skip First Line',
             'skip_duplicate_urls' => 'Skip Duplicate Urls',
             'skip_duplicate_embeds' => 'Skip Duplicate Embeds',
             'skip_new_categories' => 'Skip New Categories',
@@ -97,20 +99,20 @@ class ImportFeed extends \yii\db\ActiveRecord
         ];
     }
 
-	public function afterFind() {
-
+	public function afterFind()
+	{
 	    $this->fields = json_decode($this->fields);
+
 	    return parent::afterFind();
 	}
 
-	public function beforeSave($insert) {
-
+	public function beforeSave($insert)
+	{
 	    if (!parent::beforeSave($insert)) {
 	        return false;
 	    }
 
 	    $this->fields = json_encode($this->fields);
-	    Yii::warning([$this->fields, $_POST]);
 
 	    return true;
 	}

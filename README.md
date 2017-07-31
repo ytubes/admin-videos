@@ -13,7 +13,7 @@
 ```php
 'modules' => [
     'videos' => [
-        'class' => 'ytubes\admin\videos\Module',
+        'class' => 'ytubes\videos\admin\Module',
     ],
 ],
 ```
@@ -34,8 +34,8 @@
 ## Крон
 Также для нормальной работы нужные воркеры для крона:
 ```
-\ytubes\admin\videos\workers\RecalculateCTR */2 * * * *
-\ytubes\admin\videos\workers\SwitchTestImage */2 * * * *
-\ytubes\admin\videos\workers\ShiftCheckpoint */2 * * * *
-\ytubes\admin\videos\workers\SetCategoriesThumbs */5 * * * * (раз в пять минут)
+\ytubes\videos\admin\cron\jobs\RecalculateCTR */2 * * * *
+\ytubes\videos\admin\cron\jobs\SwitchTestImage */2 * * * *
+\ytubes\videos\admin\cron\jobs\ShiftCheckpoint */2 * * * *
+\ytubes\videos\admin\cron\jobs\SetCategoriesThumbs */5 * * * * (раз в пять минут)
 ```

@@ -20,9 +20,36 @@ $this->params['breadcrumbs'][] = 'Категории видео';
 	<div class="row">
 		<div class="col-md-12">
 
+		<?php if ($model->hasNotInsertedRows()): ?>
+			<?php $numNotInsertedRows = count($model->getNotInsertedRows()) ?>
+			<div class="box box-danger collapsed-box">
+				<div class="box-header with-border">
+					<h3 class="box-title">Не вставленные строки</h3>
+
+					<div class="box-tools pull-right">
+						<span data-toggle="tooltip" title="" class="badge bg-red" data-original-title="<?= $numNotInsertedRows ?> строки"><?= $numNotInsertedRows ?></span>
+							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+			                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+			        </div>
+				</div>
+			            <!-- /.box-header -->
+				<div class="box-body" style="display: none;">
+					<div class="row">
+						<div class="col-md-12 form-group">
+							<?= Html::textarea('csv_not_inserted_rows', implode(PHP_EOL, $model->getNotInsertedRows()), [
+								'id' => 'csv-not-inserted-rows',
+								'class' => 'form-control csv-not-inserted-rows',
+								'rows' => 12]
+							) ?>
+						</div>
+					</div>
+				</div>
+			</div>
+		<?php endif; ?>
+
 			<div class="box box-primary">
 				<div class="box-header with-border">
-					<i class="glyphicon glyphicon-import"></i><h3 class="box-title">Импорт категорий</h3>
+					<i class="glyphicon glyphicon-import text-light-violet"></i><h3 class="box-title">Импорт категорий</h3>
 	            </div>
 
 				<?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
@@ -34,14 +61,24 @@ $this->params['breadcrumbs'][] = 'Категории видео';
 								<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
 								<h4><i class="icon fa fa-exclamation-circle"></i> Следующие записи не были добавлены: </h4>
 								<ul>
-								<?php foreach ($model->getErrors('csv_rows') as $error): ?>
-									<li><?= $error ?></li>
+								<?php foreach ($model->getErrors('csv_rows') as $errorMessage): ?>
+									<?php if (is_array($errorMessage)): ?>
+										<?php $key = key($errorMessage); ?>
+										<li>Категория: <b><?= Html::encode($key) ?></b>:</li>
+										<ul>
+											<?php foreach ($errorMessage[$key] as $error): ?>
+												<li><?= $error ?></li>
+											<?php endforeach ?>
+										</ul>
+									<?php else: ?>
+										<li><?= $errorMessage ?></li>
+									<?php endif ?>
 								<?php endforeach ?>
 								</ul>
 							</div>
 						<?php endif; ?>
 
-						<h4>Настройки ввода</h4>
+						<h3>Настройки ввода</h3>
 						<div class="row">
 							<div class="col-md-3 form-group">
 								<label class="control-label" style="display:block;">Добавить\удалить поля</label>
@@ -84,7 +121,11 @@ $this->params['breadcrumbs'][] = 'Категории видео';
 							</div>
 
 							<div class="col-md-12 form-group">
-								<label><?= Html::activeCheckbox($model, 'update_category', ['name' => 'update_category', 'label' => false]) ?> <span>Обновить при совпадении id или названия</span></label>
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['name' => 'skip_first_line', 'label' => false]) ?> <span>Пропустить первую строчку</span></label>
+								<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
+							</div>
+							<div class="col-md-12 form-group">
+								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'update_category', ['name' => 'update_category', 'label' => false]) ?> <span>Обновить при совпадении id или названия</span></label>
 								<div class="help-block">Если опция не активна, при совпадении идентификатора или названия импортируемая категория будет игнорироваться.</div>
 							</div>
 						</div>

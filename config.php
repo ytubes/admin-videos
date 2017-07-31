@@ -1,12 +1,14 @@
 <?php
 
-use backend\widgets\SettingsMenu;
-
 return [
     'id' => 'videos',
-    'class' => 'ytubes\admin\videos\Module',
-    'namespace' => 'ytubes\admin\videos',
+    'class' => 'ytubes\videos\admin\Module',
+    'namespace' => 'ytubes\videos\admin',
     'events' => [
-        ['class' => SettingsMenu::className(),'event' => SettingsMenu::EVENT_INIT, 'callback' => ['ytubes\admin\videos\Events', 'onSettingsMenuInit']],
+        [
+            'class' => 'backend\widgets\SettingsMenu',//::className(),
+            'event' => backend\widgets\SettingsMenu::EVENT_INIT,
+            'callback' => ['ytubes\videos\admin\Events', 'onSettingsMenuInit'],
+        ],
     ],
 ];

@@ -1,21 +1,26 @@
 <?php
-
-namespace ytubes\admin\videos\controllers;
+namespace ytubes\videos\admin\controllers;
 
 use Yii;
-
-use yii\filters\VerbFilter;
-use yii\filters\AccessControl;
-
 use yii\web\NotFoundHttpException;
 
-use ytubes\admin\videos\models\Settings;
+use ytubes\videos\admin\models\Settings;
 
 /**
  * VideosController implements the CRUD actions for Videos model.
  */
 class SettingsController extends \yii\web\Controller
 {
+    public $request = 'request';
+    public $response = 'response';
+
+    public function init()
+    {
+        parent::init();
+        	// Инжект request и response
+        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::class);
+        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::class);
+    }
     /**
      * @inheritdoc
      */
@@ -23,7 +28,7 @@ class SettingsController extends \yii\web\Controller
     {
         return [
 	       'access' => [
-	           'class' => AccessControl::className(),
+	           'class' => \yii\filters\AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -35,7 +40,7 @@ class SettingsController extends \yii\web\Controller
                ],
 	       ],
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => \yii\filters\VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                 ],
@@ -51,8 +56,8 @@ class SettingsController extends \yii\web\Controller
     {
         $model = new Settings();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('info', 'Сохранилось');
+        if ($model->load($this->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('info', 'Новые настройки сохранены');
             $this->redirect(['index']);
         }
 
