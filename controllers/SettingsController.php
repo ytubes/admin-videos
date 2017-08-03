@@ -2,24 +2,33 @@
 namespace ytubes\videos\admin\controllers;
 
 use Yii;
+use yii\di\Instance;
+use yii\web\Controller;
+use yii\web\Request;
+use yii\web\Response;
+use yii\web\Session;
 use yii\web\NotFoundHttpException;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 
 use ytubes\videos\admin\models\Settings;
 
 /**
  * VideosController implements the CRUD actions for Videos model.
  */
-class SettingsController extends \yii\web\Controller
+class SettingsController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
+    public $session = 'session';
 
     public function init()
     {
         parent::init();
         	// Инжект request и response
-        $this->request = \yii\di\Instance::ensure($this->request, \yii\web\Request::class);
-        $this->response = \yii\di\Instance::ensure($this->response, \yii\web\Response::class);
+        $this->request = Instance::ensure($this->request, Request::class);
+        $this->response = Instance::ensure($this->response, Response::class);
+        $this->session = Instance::ensure($this->session, Session::class);
     }
     /**
      * @inheritdoc
@@ -28,7 +37,7 @@ class SettingsController extends \yii\web\Controller
     {
         return [
 	       'access' => [
-	           'class' => \yii\filters\AccessControl::class,
+	           'class' => AccessControl::class,
                'rules' => [
                    [
                        'allow' => true,
@@ -40,7 +49,7 @@ class SettingsController extends \yii\web\Controller
                ],
 	       ],
             'verbs' => [
-                'class' => \yii\filters\VerbFilter::class,
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
                 ],
@@ -49,7 +58,7 @@ class SettingsController extends \yii\web\Controller
     }
 
     /**
-     * Lists all Setting models.
+     * List base Settings and save it.
      * @return mixed
      */
     public function actionIndex()
@@ -57,8 +66,7 @@ class SettingsController extends \yii\web\Controller
         $model = new Settings();
 
         if ($model->load($this->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('info', 'Новые настройки сохранены');
-            $this->redirect(['index']);
+            $this->session->setFlash('info', 'Новые настройки сохранены');
         }
 
         return $this->render('index', [

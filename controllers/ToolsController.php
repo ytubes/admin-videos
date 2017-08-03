@@ -53,11 +53,21 @@ class ToolsController extends Controller
                     'clear-stats' => ['POST'],
                     'random-date' => ['POST'],
                     'clear-videos' => ['POST'],
+                    'clear-related' => ['POST'],
+                    'recalculate-categories-videos' => ['POST'],
+                    'set-categories-thumbs' => ['POST'],
                 ],
             ],
 	        'contentNegotiator' => [
 	            'class' => ContentNegotiator::class,
-	            'only' => ['clear-stats', 'random-date', 'clear-videos'],
+	            'only' => [
+	            	'clear-stats',
+	            	'random-date',
+	            	'clear-videos',
+	            	'clear-related',
+	            	'recalculate-categories-videos',
+	            	'set-categories-thumbs',
+	            ],
 	            'formatParam' => '_format',
 	            'formats' => [
 	                'application/json' => Response::FORMAT_JSON,
@@ -81,7 +91,7 @@ class ToolsController extends Controller
 
     /**
      * Очищает статистику по видео (показы, просмотры и т.д.)
-     * @return mixed
+     * @return json
      */
     public function actionClearStats()
     {
@@ -97,7 +107,7 @@ class ToolsController extends Controller
     /**
      * Creates a new VideosCategories model.
      * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
+     * @return json
      */
     public function actionRandomDate()
     {
@@ -111,15 +121,60 @@ class ToolsController extends Controller
     }
 
     /**
-     * Creates a new VideosCategories model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
+     * Удаляет все видео.
+     *
+     * @return json
      */
     public function actionClearVideos()
     {
         $model = new Tools();
 
         if ($model->load([$model->formName() => $this->request->post()]) && $model->clearVideos()) {
+            return ['success' => true];
+        } else {
+            return ['success' => false];
+        }
+    }
+    /**
+     * Очищает таблицу "похожие видео".
+     *
+     * @return json
+     */
+    public function actionClearRelated()
+    {
+        $model = new Tools();
+
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->clearRelated()) {
+            return ['success' => true];
+        } else {
+            return ['success' => false];
+        }
+    }
+    /**
+     * Очищает таблицу "похожие видео".
+     *
+     * @return json
+     */
+    public function actionRecalculateCategoriesVideos()
+    {
+        $model = new Tools();
+
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->recalculateCategoriesVideos()) {
+            return ['success' => true];
+        } else {
+            return ['success' => false];
+        }
+    }
+    /**
+     * Установка тумб у категорий по данным ротации
+     *
+     * @return json
+     */
+    public function actionSetCategoriesThumbs()
+    {
+        $model = new Tools();
+
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->setCategoriesThumbs()) {
             return ['success' => true];
         } else {
             return ['success' => false];

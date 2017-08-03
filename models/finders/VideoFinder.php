@@ -46,7 +46,7 @@ class VideoFinder extends Model
             [['slug'], 'string'],
             ['page', 'integer', 'min' => 1],
             ['page', 'default', 'value' => 1],
-            /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_count', 'views', 'status'], 'integer'],
+            /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_num', 'views', 'status'], 'integer'],
             [['slug', 'title', 'description', 'short_description', 'video_url', 'embed', 'published_at', 'created_at', 'updated_at'], 'safe'],*/
         ];
     }
@@ -333,7 +333,7 @@ class VideoFinder extends Model
             'on_index' => $this->on_index,
             'likes' => $this->likes,
             'dislikes' => $this->dislikes,
-            'comments_count' => $this->comments_count,
+            'comments_num' => $this->comments_num,
             'views' => $this->views,
             'status' => $this->status,
             'published_at' => $this->published_at,

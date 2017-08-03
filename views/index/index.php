@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'on_index',
             // 'likes',
             // 'dislikes',
-            // 'comments_count',
+            // 'comments_num',
             // 'views',
             // 'status',
             'published_at',

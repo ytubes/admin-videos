@@ -34,7 +34,7 @@ class CategoryFinder extends Model
         	[['slug'], 'string'],
         	['page', 'integer', 'min' => 1],
 			['page', 'default', 'value' => 1],
-            /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_count', 'views', 'status'], 'integer'],
+            /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_num', 'views', 'status'], 'integer'],
             [['slug', 'title', 'description', 'short_description', 'video_url', 'embed', 'published_at', 'created_at', 'updated_at'], 'safe'],*/
         ];
     }
@@ -75,7 +75,7 @@ class CategoryFinder extends Model
 	}
 
 		// Нужна ли?
-	public function getCategoryById($id)
+	/*public function getCategoryById($id)
 	{
 		$this->getCategoriesIndexedById();
 
@@ -147,5 +147,5 @@ class CategoryFinder extends Model
 		}
 
 		return $this->categoriesIdsNamesArray;
-	}
+	}*/
 }

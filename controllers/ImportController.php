@@ -10,6 +10,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\Controller;
 use yii\web\Request;
 use yii\web\Response;
+use yii\web\Session;
 
 use ytubes\videos\admin\models\forms\CategoriesImport;
 use ytubes\videos\admin\models\forms\VideosImport;
@@ -22,6 +23,7 @@ class ImportController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
+    public $session = 'session';
 
     public function init()
     {
@@ -29,6 +31,7 @@ class ImportController extends Controller
         	// Инжект request и response
         $this->request = Instance::ensure($this->request, Request::class);
         $this->response = Instance::ensure($this->response, Response::class);
+        $this->session = Instance::ensure($this->session, Session::class);
     }
 
     /**
@@ -76,7 +79,7 @@ class ImportController extends Controller
 
         if ($model->load([$model->formName() => $this->request->post()]) && $model->save()) {
             if ($model->imported_rows_num > 0) {
-            	Yii::$app->getSession()->setFlash('success', "<b>{$model->imported_rows_num}</b> роликов успешно добавлено");
+            	$this->session->setFlash('success', "<b>{$model->imported_rows_num}</b> роликов успешно добавлено");
             }
         }
 
@@ -96,7 +99,7 @@ class ImportController extends Controller
 
         if ($model->load([$model->formName() => $this->request->post()]) && $model->save()) {
             if ($model->imported_rows_num > 0) {
-            	Yii::$app->getSession()->setFlash('success', "<b>{$model->imported_rows_num}</b> категорий добавлено или обновлено");
+            	$this->session->setFlash('success', "<b>{$model->imported_rows_num}</b> категорий добавлено или обновлено");
             }
         }
 
@@ -177,7 +180,7 @@ class ImportController extends Controller
 		$name = $model->name;
 
         if ($model->delete()) {
-        	Yii::$app->getSession()->setFlash('success', "Фид \"<b>$name</b>\" успешно удален.");
+        	$this->session->setFlash('success', "Фид \"<b>$name</b>\" успешно удален.");
 
             return $this->redirect(['list-feeds']);
         }

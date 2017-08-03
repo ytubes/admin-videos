@@ -38,7 +38,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'dislikes')->textInput() ?>
 
-    <?= $form->field($model, 'comments_count')->textInput() ?>
+    <?= $form->field($model, 'comments_num')->textInput() ?>
 
     <?= $form->field($model, 'views')->textInput() ?>
 
