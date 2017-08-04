@@ -15,6 +15,7 @@ use ytubes\videos\models\Video;
 use ytubes\videos\models\Category;
 use ytubes\videos\models\Image;
 use ytubes\videos\models\RotationStats;
+use ytubes\videos\models\VideosCategoriesMap;
 use ytubes\videos\admin\models\ImportFeed;
 use ytubes\videos\admin\models\finders\VideoFinder;
 
@@ -279,8 +280,7 @@ class VideosImport extends \yii\base\Model
 			if ($video instanceof Video) {
 				$this->addError('csv_rows', "{$newVideo['video_id']} дубликат идентификатора");
 
-				if (isset($newVideo['video_id']))
-					$this->not_inserted_ids[] = $newVideo['video_id'];
+				$this->not_inserted_ids[] = $newVideo['video_id'];
 
 				return false;
 			}
@@ -348,13 +348,13 @@ class VideosImport extends \yii\base\Model
 		$video->updated_at = $currentTime;
 		$video->created_at = $currentTime;
 
-		if (!$video->save(true)) {
+		if (false === $video->save(true)) {
             $validateErrors = [];
 			$validateErrors[$video->title] = call_user_func_array('array_merge', $video->getErrors());
             $this->addError('csv_rows', $validateErrors);
 
-				if (isset($newVideo['video_id']))
-					$this->not_inserted_ids[] = $newVideo['video_id'];
+			if (isset($newVideo['video_id']))
+				$this->not_inserted_ids[] = $newVideo['video_id'];
 
             return false;
 		}
@@ -412,15 +412,38 @@ class VideosImport extends \yii\base\Model
 			}
 		}
 
+			// В таблицу категорий
+		if (!empty($categories)) {
+			$categoriesMap = [];
+
+			foreach ($categories as $category) {
+				$existsRecords = VideosCategoriesMap::find()
+					->where(['category_id' => $category->category_id, 'video_id' => $video->video_id])
+					->exists();
+
+				if ($existsRecords) {
+					continue;
+				}
+
+				$categoriesMap[] = [$category->category_id, $video->video_id];
+			}
+
+			if (!empty($categoriesMap)) {
+				Yii::$app->db->createCommand()
+					->batchInsert(VideosCategoriesMap::tableName(), ['category_id', 'video_id'], $categoriesMap)
+					->execute();
+			}
+		}
+
 			// В таблицу для ротации
 		if (!empty($categories) && !empty($screenshots)) {
 			foreach ($categories as $category) {
 				foreach ($screenshots as $sKey => $screenshot) {
-					$rotationStats = RotationStats::find()
+					$existsRecords = RotationStats::find()
 						->where(['video_id' => $video->video_id, 'category_id' => $category->category_id, 'image_id' => $screenshot->image_id])
-						->one();
+						->exists();
 
-					if ($rotationStats instanceof RotationStats)
+					if ($existsRecords)
 						continue;
 
 					$rotationStats = new RotationStats();

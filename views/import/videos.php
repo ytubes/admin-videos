@@ -103,7 +103,7 @@ $this->params['breadcrumbs'][] = 'Видео';
 
 			<div class="box box-primary">
 				<div class="box-header with-border">
-					<i class="glyphicon glyphicon-import"></i><h3 class="box-title">Импорт видео</h3>
+					<i class="glyphicon glyphicon-import text-light-violet"></i><h3 class="box-title">Импорт видео</h3>
 					<div class="box-tools pull-right">
 						<div class="btn-group">
 							<?php $form = ActiveForm::begin([

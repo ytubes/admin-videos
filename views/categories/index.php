@@ -15,6 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 // Также в импорте категорий нужно сохранять выбранные элементы при помощи локал стораджа
 
 ?>
+
 <section class="content">
 
 	<div class="row">
