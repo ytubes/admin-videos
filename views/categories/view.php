@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = 'Информация';
 				            'param1:ntext',
 				            'param2:ntext',
 				            'param3:ntext',
-				            'items_count',
+				            'videos_num',
 				            'on_index',
 				            'shows',
 				            'clicks',

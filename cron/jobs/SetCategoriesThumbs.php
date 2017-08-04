@@ -6,19 +6,15 @@ use Yii;
 use ytubes\videos\models\RotationStats;
 use ytubes\videos\models\Category;
 use ytubes\videos\models\Image;
-use ytubes\videos\admin\models\finders\VideoFinder;
+use ytubes\videos\models\finders\VideoFinder;
+use ytubes\videos\models\finders\CategoryFinder;
 
 /**
  * SetCategoriesThumbs устанавливает категорийные тумбы исходя из данных по цтр тумб к видео
  */
-class SetCategoriesThumbs extends \yii\base\Object
+class SetCategoriesThumbs
 {
     private $errors = [];
-
-    public function __construct($config = [])
-    {
-        parent::__construct($config);
-    }
 
     public function handle()
     {
@@ -30,8 +26,7 @@ class SetCategoriesThumbs extends \yii\base\Object
      */
     public function setCategoriesThumbs()
     {
-        $categories = Category::find()
-            ->all();
+        $categories = CategoryFinder::getActiveCategories();
 
         if (empty($categories)) {
             return;
@@ -46,7 +41,7 @@ class SetCategoriesThumbs extends \yii\base\Object
             foreach ($categories as $category) {
 
                     // Выбрать тумбы с первой страницы категории
-                $items = $searchModel->getItemsFromCategory([$searchModel->formName() => ['slug' => $category->slug, 'sort' => 'popular']], $category);
+                $items = $searchModel->getVideosFromCategory($category);
 
                 $imagesIds = [];
 
@@ -55,7 +50,7 @@ class SetCategoriesThumbs extends \yii\base\Object
                 }
 
                 foreach ($items as $item) {
-                    $imagesIds[] = $item->image->image_id;
+                    $imagesIds[] = $item['image']['image_id'];
                 }
 
                     // Отсеять уже использованные в других категориях (уникальные должны быть)
@@ -66,9 +61,10 @@ class SetCategoriesThumbs extends \yii\base\Object
                     $firstId = array_shift($unusedIds);
                     $img = Image::findOne($firstId);
 
-                    if (null !== $img) {
-                        $category->image = $img->filepath;
-                        $category->save(true);
+                    if ($img instanceof Image) {
+                        Yii::$app->db->createCommand()
+                        	->update(Category::tableName(), ['image' => $img->filepath], "`category_id`={$category['category_id']}")
+                        	->execute();
                     }
 
                         // Записать, что данная тумба уже используется.
@@ -77,10 +73,7 @@ class SetCategoriesThumbs extends \yii\base\Object
             }
 
         } catch(\Exception $e) {
-            //$transaction->rollBack();
             throw $e;
-        } catch(\Throwable $e) {
-            //$transaction->rollBack();
         }
 
     }

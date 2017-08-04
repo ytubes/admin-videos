@@ -11,6 +11,7 @@ use yii\data\ActiveDataProvider;
 use yii\web\NotFoundHttpException;
 use yii\web\Request;
 use yii\web\Response;
+use yii\web\Session;
 use yii\web\Controller;
 
 use ytubes\videos\models\Category;
@@ -24,6 +25,7 @@ class CategoriesController extends Controller
 {
     public $request = 'request';
     public $response = 'response';
+    public $session = 'session';
 
     public function init()
     {
@@ -31,6 +33,7 @@ class CategoriesController extends Controller
         	// Инжект request и response
         $this->request = Instance::ensure($this->request, Request::class);
         $this->response = Instance::ensure($this->response, Response::class);
+        $this->session = Instance::ensure($this->session, Session::class);
     }
 
     /**
@@ -134,7 +137,7 @@ class CategoriesController extends Controller
         	->all();
 
         if ($model->load($this->request->post()) && $model->save()) {
-            Yii::$app->getSession()->setFlash('success', 'Новые данные для категории сохранены');
+            $this->session->setFlash('success', 'Новые данные для категории сохранены');
         }
 
         return $this->render('update', [
@@ -142,7 +145,6 @@ class CategoriesController extends Controller
             'categories' => $categories,
         ]);
     }
-
     /**
      * Deletes an existing Category model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
@@ -159,39 +161,19 @@ class CategoriesController extends Controller
         $title = $category->title;
 
         if ($category->delete()) {
-        	Yii::$app->getSession()->setFlash('success', "Категория \"<b>{$title}</b>\" успешно удалена");
+        	$this->session->setFlash('success', "Категория \"<b>{$title}</b>\" успешно удалена");
         } else {
-        	Yii::$app->getSession()->setFlash('error', "Удалить категрию \"<b>{$title}</b>\" не удалось");
+        	$this->session->setFlash('error', "Удалить категрию \"<b>{$title}</b>\" не удалось");
         }
 
         return $this->redirect(['index']);
     }
-
-    /**
-     * Displays a single Category model.
-     * @param integer $id
-     * @return mixed
-     */
-    public function actionImport()
-    {
-        $model = new CategoriesImport();
-
-        if ($model->load([$model->formName() => $this->request->post()]) && $model->save()) {
-            Yii::warning('imported');
-        }
-
-        return $this->render('import', [
-        	'model' => $model,
-        ]);
-    }
-
     /**
      * Сохраняет порядок сортировки категорий, установленный пользователем.
      * @return mixed
      */
     public function actionSaveOrder()
     {
-
 			// Валидация массива идентификаторов категорий.
 		$validationModel = DynamicModel::validateData(['categories_ids' => $this->request->post('order')], [
             ['categories_ids', 'each', 'rule' => ['integer']],

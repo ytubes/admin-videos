@@ -8,7 +8,9 @@ use yii\widgets\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Settings';
+$this->title = 'Настройки';
+$this->params['subtitle'] = 'Видео';
+
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -21,30 +23,76 @@ $this->params['breadcrumbs'][] = $this->title;
 		</div>
 
 		<div class="col-md-9">
-			<div class="box box-primary">
-				<div class="box-header with-border">
-					<i class="fa fa-edit"></i><h3 class="box-title">Настройки видео</h3>
-	            </div>
+			<?php $form = ActiveForm::begin([
+				'action' => Url::to(['index']),
+			]); ?>
+				<div class="nav-tabs-custom">
+					<ul class="nav nav-tabs">
+						<li class="active"><a href="#rotation" data-toggle="tab" aria-expanded="true">Ротация</a></li>
+						<li class=""><a href="#related" data-toggle="tab" aria-expanded="false">Похожие ролики</a></li>
+					</ul>
 
-				<?php $form = ActiveForm::begin([
-					'action' => Url::to(['index']),
-				]); ?>
+					<div class="tab-content">
+						<div class="tab-pane active" id="rotation">
+						    <?= $form->field($model, 'items_per_page')
+						    		->textInput(['maxlength' => true])
+						    		->label('Количество тумб на страницу')
+						    ?>
 
-		            <div class="box-body pad">
-					    <?= $form->field($model, 'items_per_page')->textInput(['maxlength' => true]) ?>
+						    <?= $form->field($model, 'pagination_buttons_count')
+						    		->textInput(['maxlength' => true])
+						    		->label('Количество кнопок в пагинации')
+						    ?>
 
-					    <?= $form->field($model, 'pagination_buttons_count')->textInput(['maxlength' => true]) ?>
+						    <?= $form->field($model, 'recalculate_ctr_period')
+						    		->textInput(['maxlength' => true])
+						    		->label('Период пересчета CTR (в показах)')
+						    		->hint('Параметр рассчитывает CTR за последние N показов. Расчет производится плавно и поделен на 5 этапов.')
+						    ?>
 
-					    <?= $form->field($model, 'recalculate_ctr_period')->textInput(['maxlength' => true]) ?>
+						    <?= $form->field($model, 'test_item_period')
+						    		->textInput(['maxlength' => true])
+						    		->label('Тестовый период тумбы (в показах)')
+						    		->hint('Во время тестового периода тумба будет показываться в тестовой зоне на странице.
+						    				По завершению теста тумба будет показываться на общих основаниях с учетом текущего CTR')
+						    ?>
 
-					    <?= $form->field($model, 'related_number')->textInput(['maxlength' => true]) ?>
+						    <?= $form->field($model, 'test_items_start')
+						    		->textInput(['maxlength' => true])
+						    		->label('После какой тумбы будет тестовая зона')
+						    ?>
 
-					    <?= $form->field($model, 'test_item_period')->textInput(['maxlength' => true]) ?>
+						    <?= $form->field($model, 'test_items_percent')
+						    		->textInput(['maxlength' => true])
+						    		->label('Процент тестовых тумб на странице')
+						    		->hint('Рассчет ведется от общего числа тумб')
+						    ?>
 
-					    <?= $form->field($model, 'test_items_percent')->textInput(['maxlength' => true]) ?>
+						</div>
 
-					    <?= $form->field($model, 'test_items_start')->textInput(['maxlength' => true]) ?>
+						<div class="tab-pane" id="related">
 
+							<div class="form-group">
+								<label><?= Html::activeCheckbox($model, 'related_enable', ['label' => false]) ?> <span>Включить отображение виджета "Похожие видео"</span></label>
+								<div class="help-block"></div>
+							</div>
+
+						    <?= $form->field($model, 'related_number')
+						    		->textInput(['maxlength' => true])
+						    		->label('Сколько похожих роликов искать')
+						    ?>
+
+							<div class="form-group">
+								<label><?= Html::activeCheckbox($model, 'related_allow_description', ['label' => false]) ?> <span>Учитывать описание</span></label>
+								<div class="help-block"></div>
+							</div>
+
+							<div class="form-group">
+								<label><?= Html::activeCheckbox($model, 'related_allow_categories', ['label' => false]) ?> <span>Учитывать категории</span></label>
+								<div class="help-block"></div>
+							</div>
+
+						</div>
 					</div>
 
 					<div class="box-footer clearfix">
@@ -52,10 +100,8 @@ $this->params['breadcrumbs'][] = $this->title;
 							<?= Html::submitButton('Сохранить', ['class' => 'btn btn-success']) ?>
 						</div>
 					</div>
-
-				<?php ActiveForm::end(); ?>
-
-			</div>
+				</div>
+			<?php ActiveForm::end(); ?>
 
 		</div>
 	</div>
