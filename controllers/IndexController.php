@@ -12,7 +12,7 @@ use yii\web\Response;
 use yii\data\ActiveDataProvider;
 
 use ytubes\videos\models\Video;
-use ytubes\videos\admin\models\forms\VideosImport;
+use ytubes\videos\admin\models\finders\VideoFinder;
 
 /**
  * IndexController implements the CRUD actions for Video model.
@@ -62,11 +62,11 @@ class IndexController extends Controller
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => Video::find(),
-        ]);
+        $searchModel = new VideoFinder();
+        $dataProvider = $searchModel->search($this->request->getQueryParams());
 
         return $this->render('index', [
+            'model' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }

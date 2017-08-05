@@ -6,6 +6,7 @@ use yii\web\NotFoundHttpException;
 use yii\data\ActiveDataProvider;
 use yii\data\Sort;
 use yii\base\Model;
+use yii\helpers\StringHelper;
 
 use ytubes\videos\models\Video;
 use ytubes\videos\models\RotationStats;
@@ -16,21 +17,16 @@ use ytubes\videos\models\Category;
  */
 class VideoFinder extends Model
 {
-    public $slug;
-    public $page;
+    public $per_page = 50;
+    public $videos_ids = '';
+    public $categories_ids = [];
+    public $user_id;
+    public $status;
+    public $title;
 
-    private $totalItems;
+    public $show_thumb = false;
 
-    private $sort;
-
-    /**
-     * @var int default items per page
-     */
-    const ITEMS_PER_PAGE = 20;
-    /**
-     * @var int default test items percentage (on page);
-     */
-    const TEST_ITEMS_PERCENT = 0;
+    public $bulk_edit = false;
 
     public function __construct($config = [])
     {
@@ -43,20 +39,70 @@ class VideoFinder extends Model
     public function rules()
     {
         return [
-            [['slug'], 'string'],
-            ['page', 'integer', 'min' => 1],
-            /*[['video_id', 'image_id', 'user_id', 'orientation', 'duration', 'on_index', 'likes', 'dislikes', 'comments_num', 'views', 'status'], 'integer'],
-            [['slug', 'title', 'description', 'short_description', 'video_url', 'embed', 'published_at', 'created_at', 'updated_at'], 'safe'],*/
+            [['user_id', 'status'], 'integer'],
+            [['per_page'], 'integer', 'max' => 1000],
+
+            [['show_thumb', 'bulk_edit'], 'boolean'],
+
+			['videos_ids', 'filter', 'skipOnEmpty' => true, 'filter' => function ($value) {
+				return StringHelper::explode($value, $delimiter = ',', true, true);
+			}],
+            ['videos_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true],
+			['videos_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
+
+            ['categories_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true ],
+			['categories_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
+
+            [['title'], 'string'],
+            ['title', 'filter', 'filter' => 'trim', 'skipOnEmpty' => true],
         ];
     }
 
     /**
-     * @inheritdoc
+     * Получает ролики постранично в разделе "все", отсортированные по дате.
      */
-    public function scenarios()
+    public function search($params)
     {
-        // bypass scenarios() implementation in the parent class
-        return Model::scenarios();
+        $query = self::find();
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+		        'pageSize' => $this->per_page,
+		    ],
+		    'sort'=> [
+		    	'defaultOrder' => [
+		    		'published_at' => SORT_DESC,
+		    	],
+		    ],
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            $query->where('1=0');
+
+            return $dataProvider;
+        }
+
+        $dataProvider->pagination->pageSize = $this->per_page;
+
+		if ($this->title) {
+			$query
+				->select(['*', 'MATCH (`title`, `description`, `short_description`) AGAINST (:query) AS `relevance`'])
+            	->where('MATCH (`title`, `description`, `short_description`) AGAINST (:query IN BOOLEAN MODE)', [
+	                ':query'=> $this->title,
+	            ])
+            	->orderBy(['relevance' => SORT_DESC]);
+		}
+
+        $query->andFilterWhere([
+            'video_id' => $this->videos_ids,
+            'user_id' => $this->user_id,
+            'status' => $this->status,
+        ]);
+
+        return $dataProvider;
     }
 
 	public static function find()
@@ -81,38 +127,4 @@ class VideoFinder extends Model
 			->where(['embed' => $embed_code])
 			->one();
 	}
-
-    /**
-     * Получает ролики постранично в разделе "все", отсортированные по дате.
-     */
-    public function getAllItems($params)
-    {
-        $videos = [];
-
-        $this->load($params);
-
-        if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            return $videos;
-        }
-
-        $videosSearch = Video::find()
-            ->with(['categories' => function ($categoryQquery) {
-                $categoryQquery->select(['category_id', 'title', 'slug', 'h1']);
-            }])
-            ->with('image')
-            ->where(['status' => 10]);
-
-        $this->totalItems = $videosSearch->count();
-
-        $items_per_page = (int) Yii::$app->getModule('videos')->settings->get('items_per_page', self::ITEMS_PER_PAGE);
-        $offset = ($this->page - 1 ) * $items_per_page;
-
-        $videos = $videosSearch->orderBy(['published_at' => SORT_DESC])
-            ->limit($items_per_page)
-            ->offset($offset)
-            ->all();
-
-        return $videos;
-    }
 }
