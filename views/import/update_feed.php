@@ -15,105 +15,102 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 
 ?>
 
-<section class="content">
+<div class="row">
+	<div class="col-md-12">
 
-	<div class="row">
-		<div class="col-md-12">
-
-			<div class="box box-primary">
-				<div class="box-header with-border">
-					<i class="fa fa-edit"></i><h3 class="box-title"><?= Html::encode($model->name) ?></h3>
-					<div class="box-tools pull-right">
-						<div class="btn-group">
-							<?= Html::a('<i class="fa fa-plus" style="color:green;"></i>', ['add-feed'], ['class' => 'btn btn-default btn-sm', 'title' => 'Добавить новый фид']) ?>
-							<?= Html::a('<i class="fa fa-trash-o" style="color:brown;"></i>', ['delete-feed', 'id' => $model->feed_id], [
-					            'class' => 'btn btn-default btn-sm',
-					            'title' => 'Удалить фид',
-					            'data' => [
-					                'confirm' => 'Действительно хотите удалить этот фид?',
-					                'method' => 'post',
-					            ],
-					        ]) ?>
-						</div>
+		<div class="box box-primary">
+			<div class="box-header with-border">
+				<i class="fa fa-edit"></i><h3 class="box-title"><?= Html::encode($model->name) ?></h3>
+				<div class="box-tools pull-right">
+					<div class="btn-group">
+						<?= Html::a('<i class="fa fa-plus" style="color:green;"></i>', ['add-feed'], ['class' => 'btn btn-default btn-sm', 'title' => 'Добавить новый фид']) ?>
+						<?= Html::a('<i class="fa fa-trash-o" style="color:brown;"></i>', ['delete-feed', 'id' => $model->feed_id], [
+				            'class' => 'btn btn-default btn-sm',
+				            'title' => 'Удалить фид',
+				            'data' => [
+				                'confirm' => 'Действительно хотите удалить этот фид?',
+				                'method' => 'post',
+				            ],
+				        ]) ?>
 					</div>
-	            </div>
+				</div>
+            </div>
 
-				<?php $form = ActiveForm::begin(); ?>
+			<?php $form = ActiveForm::begin(); ?>
 
-		            <div class="box-body pad">
+	            <div class="box-body pad">
 
-					    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+				    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
-					    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
+				    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
 
-						<h4>Настройки ввода</h4>
-						<div class="row">
-							<div class="col-md-3 form-group">
-								<label class="control-label" style="display:block;">Добавить\удалить поля</label>
-								<div class="btn-group">
-	                    			<button type="button" id="add_field" class="btn btn-default"><i class="fa fa-plus"></i></button>
-	                    			<button type="button" id="remove_field" class="btn btn-default"><i class="fa fa-minus"></i></button>
-	                    		</div>
-							</div>
+					<h4>Настройки ввода</h4>
+					<div class="row">
+						<div class="col-md-3 form-group">
+							<label class="control-label" style="display:block;">Добавить\удалить поля</label>
+							<div class="btn-group">
+                    			<button type="button" id="add_field" class="btn btn-default"><i class="fa fa-plus"></i></button>
+                    			<button type="button" id="remove_field" class="btn btn-default"><i class="fa fa-minus"></i></button>
+                    		</div>
+						</div>
+						<div class="col-md-2 form-group">
+							<label class="control-label">Разделитель</label>
+							<?= Html::activeInput('text', $model, 'delimiter', ['class' => 'form-control']) ?>
+            			</div>
+						<div class="col-md-2 form-group">
+							<label class="control-label">Ограничитель поля</label>
+							<?= Html::activeInput('text', $model, 'enclosure', ['class' => 'form-control']) ?>
+            			</div>
+					</div>
+
+					<h4>Поля csv</h4>
+					<div class="row csv-fields">
+						<?php foreach ($model->fields as $field): ?>
 							<div class="col-md-2 form-group">
-								<label class="control-label">Разделитель</label>
-								<?= Html::activeInput('text', $model, 'delimiter', ['class' => 'form-control']) ?>
-                			</div>
-							<div class="col-md-2 form-group">
-								<label class="control-label">Ограничитель поля</label>
-								<?= Html::activeInput('text', $model, 'enclosure', ['class' => 'form-control']) ?>
-                			</div>
-						</div>
-
-						<h4>Поля csv</h4>
-						<div class="row csv-fields">
-							<?php foreach ($model->fields as $field): ?>
-								<div class="col-md-2 form-group">
-									<?= Html::dropDownList('ImportFeed[fields][]', $field, $model->getFieldsOptions(), ['class' => 'form-control']) ?>
-								</div>
-							<?php endforeach; ?>
-						</div>
-
-						<div class="row">
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['label' => false]) ?> <span>Пропустить первую строчку</span></label>
-								<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
+								<?= Html::dropDownList('ImportFeed[fields][]', $field, $model->getFieldsOptions(), ['class' => 'form-control']) ?>
 							</div>
-
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
-							</div>
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_new_categories', ['label' => false]) ?> <span>Запретить создание новых категорий</span></label>
-							</div>
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'external_images', ['label' => false]) ?> <span>Использовать внешние тумбы (не будут скачиваться и нарезаться)</span></label>
-							</div>
-
-							<div class="col-md-12 form-group">
-								<label class="control-label">Шаблон для ролика (по умолчанию используется view)</label>
-								<?= Html::activeInput('text', $model, 'template', ['class' => 'form-control', 'style' => 'width:200px']) ?>
-                			</div>
-						</div>
-
+						<?php endforeach; ?>
 					</div>
 
-
-					<div class="box-footer clearfix">
-					    <div class="form-group">
-							<?= Html::submitButton('Сохранить', ['class' => 'btn btn-primary']) ?>
-							<?= Html::a('К списку', ['list-feeds'], ['class' => 'btn btn-warning']) ?>
+					<div class="row">
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['label' => false]) ?> <span>Пропустить первую строчку</span></label>
+							<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
 						</div>
+
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
+						</div>
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_new_categories', ['label' => false]) ?> <span>Запретить создание новых категорий</span></label>
+						</div>
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'external_images', ['label' => false]) ?> <span>Использовать внешние тумбы (не будут скачиваться и нарезаться)</span></label>
+						</div>
+
+						<div class="col-md-12 form-group">
+							<label class="control-label">Шаблон для ролика (по умолчанию используется view)</label>
+							<?= Html::activeInput('text', $model, 'template', ['class' => 'form-control', 'style' => 'width:200px']) ?>
+            			</div>
 					</div>
 
-				<?php ActiveForm::end(); ?>
+				</div>
 
-			</div>
+
+				<div class="box-footer clearfix">
+				    <div class="form-group">
+						<?= Html::submitButton('Сохранить', ['class' => 'btn btn-primary']) ?>
+						<?= Html::a('К списку', ['list-feeds'], ['class' => 'btn btn-warning']) ?>
+					</div>
+				</div>
+
+			<?php ActiveForm::end(); ?>
 
 		</div>
+
 	</div>
-</section>
+</div>
 
 <?php
 

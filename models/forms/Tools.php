@@ -5,10 +5,12 @@ use Yii;
 use yii\db\Expression;
 
 use ytubes\videos\models\Video;
+use ytubes\videos\models\VideoStatus;
 use ytubes\videos\models\Category;
 use ytubes\videos\models\Image;
 use ytubes\videos\models\RotationStats;
 use ytubes\videos\models\VideosRelatedMap;
+use ytubes\videos\models\finders\RelatedFinder;
 use ytubes\videos\admin\cron\jobs\SetCategoriesThumbs;
 
 /**
@@ -33,14 +35,7 @@ class Tools extends \yii\base\Model
     public function rules()
     {
         return [
-            [['delimiter', 'fields'], 'required'],
-            ['fields', 'each', 'rule' => ['string'], 'skipOnEmpty' => false],
-            [['delimiter', 'enclosure', 'csv_rows'], 'filter', 'filter' => 'trim'],
-            [['delimiter', 'enclosure', 'csv_rows'], 'string'],
             [['replace'], 'boolean'],
-            ['replace', 'default', 'value' => false],
-
-            [['csv_file'], 'file', 'checkExtensionByMimeType' => false, 'skipOnEmpty' => true, 'extensions' => 'csv', 'maxFiles' => 1, 'mimeTypes' => 'text/plain'],
         ];
     }
 
@@ -211,6 +206,27 @@ class Tools extends \yii\base\Model
 	{
 		$job = new SetCategoriesThumbs();
 		$job->handle();
+
+		return true;
+	}
+	/**
+	* Перегенерация релатедов у всех видео.
+	*
+	*/
+	public function regenerateRelated()
+	{
+		$videos = Video::find()
+			->select(['video_id'])
+			->where(['status' => VideoStatus::PUBLISH])
+			->asArray()
+			->all();
+		if (!empty($videos)) {
+			$relatedFinder = new RelatedFinder();
+
+			foreach ($videos as $video) {
+				$relatedFinder->findAndSaveRelatedIds((int) $video['video_id']);
+			}
+		}
 
 		return true;
 	}

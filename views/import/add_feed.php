@@ -15,92 +15,89 @@ $this->params['breadcrumbs'][] = 'Добавить настройку импор
 
 ?>
 
-<section class="content">
+<div class="row">
+	<div class="col-md-12">
 
-	<div class="row">
-		<div class="col-md-12">
+		<div class="box box-success">
+			<div class="box-header with-border">
+				<i class="fa fa-file-o text-purple-disabled"></i><h3 class="box-title">Добавить настройку импорта видео</h3>
+            </div>
 
-			<div class="box box-success">
-				<div class="box-header with-border">
-					<i class="fa fa-file-o text-purple-disabled"></i><h3 class="box-title">Добавить настройку импорта видео</h3>
-	            </div>
+			<?php $form = ActiveForm::begin(); ?>
 
-				<?php $form = ActiveForm::begin(); ?>
+	            <div class="box-body pad">
 
-		            <div class="box-body pad">
+				    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
 
-					    <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+				    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
 
-					    <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
-
-						<h4>Настройки ввода</h4>
-						<div class="row">
-							<div class="col-md-3 form-group">
-								<label class="control-label" style="display:block;">Добавить\удалить поля</label>
-								<div class="btn-group">
-	                    			<button type="button" id="add_field" class="btn btn-default"><i class="fa fa-plus"></i></button>
-	                    			<button type="button" id="remove_field" class="btn btn-default"><i class="fa fa-minus"></i></button>
-	                    		</div>
-							</div>
-							<div class="col-md-2 form-group">
-								<label class="control-label">Разделитель</label>
-								<?= Html::activeInput('text', $model, 'delimiter', ['class' => 'form-control']) ?>
-                			</div>
-							<div class="col-md-2 form-group">
-								<label class="control-label">Ограничитель поля</label>
-								<?= Html::activeInput('text', $model, 'enclosure', ['class' => 'form-control']) ?>
-                			</div>
+					<h4>Настройки ввода</h4>
+					<div class="row">
+						<div class="col-md-3 form-group">
+							<label class="control-label" style="display:block;">Добавить\удалить поля</label>
+							<div class="btn-group">
+                    			<button type="button" id="add_field" class="btn btn-default"><i class="fa fa-plus"></i></button>
+                    			<button type="button" id="remove_field" class="btn btn-default"><i class="fa fa-minus"></i></button>
+                    		</div>
 						</div>
-
-						<h4>Поля csv</h4>
-						<div class="row csv-fields">
-							<?php foreach ($model->fields as $field): ?>
-								<div class="col-md-2 form-group">
-									<?= Html::dropDownList('ImportFeed[fields][]', '', $model->getFieldsOptions(), ['class' => 'form-control']) ?>
-								</div>
-							<?php endforeach; ?>
-						</div>
-
-						<div class="row">
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['label' => false]) ?> <span>Пропустить первую строчку</span></label>
-								<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
-							</div>
-
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
-							</div>
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_new_categories', ['label' => false]) ?> <span>Запретить создание новых категорий</span></label>
-							</div>
-							<div class="col-md-12 form-group">
-								<label class="checkbox-block"><?= Html::activeCheckbox($model, 'external_images', ['label' => false]) ?> <span>Использовать внешние тумбы (не будут скачиваться и нарезаться)</span></label>
-							</div>
-
-							<div class="col-md-12 form-group">
-								<label class="control-label">Шаблон для ролика (по умолчанию используется view)</label>
-								<?= Html::activeInput('text', $model, 'template', ['class' => 'form-control', 'style' => 'width:200px']) ?>
-                			</div>
-						</div>
-
+						<div class="col-md-2 form-group">
+							<label class="control-label">Разделитель</label>
+							<?= Html::activeInput('text', $model, 'delimiter', ['class' => 'form-control']) ?>
+            			</div>
+						<div class="col-md-2 form-group">
+							<label class="control-label">Ограничитель поля</label>
+							<?= Html::activeInput('text', $model, 'enclosure', ['class' => 'form-control']) ?>
+            			</div>
 					</div>
 
-
-					<div class="box-footer clearfix">
-					    <div class="form-group">
-							<?= Html::submitButton('Добавить', ['class' => 'btn btn-success']) ?>
-							<?= Html::a('К списку', ['list-feeds'], ['class' => 'btn btn-warning']) ?>
-						</div>
+					<h4>Поля csv</h4>
+					<div class="row csv-fields">
+						<?php foreach ($model->fields as $field): ?>
+							<div class="col-md-2 form-group">
+								<?= Html::dropDownList('ImportFeed[fields][]', '', $model->getFieldsOptions(), ['class' => 'form-control']) ?>
+							</div>
+						<?php endforeach; ?>
 					</div>
 
-				<?php ActiveForm::end(); ?>
+					<div class="row">
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_first_line', ['label' => false]) ?> <span>Пропустить первую строчку</span></label>
+							<div class="help-block">Активировать, если в первой строке указаны названия столбцов</div>
+						</div>
 
-			</div>
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_urls', ['label' => false]) ?> <span>Пропускать видео с повторяющимися source URL-ами</span></label><br>
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_duplicate_embeds', ['label' => false]) ?> <span>Пропускать видео с повторяющимися embed кодами</span></label>
+						</div>
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'skip_new_categories', ['label' => false]) ?> <span>Запретить создание новых категорий</span></label>
+						</div>
+						<div class="col-md-12 form-group">
+							<label class="checkbox-block"><?= Html::activeCheckbox($model, 'external_images', ['label' => false]) ?> <span>Использовать внешние тумбы (не будут скачиваться и нарезаться)</span></label>
+						</div>
+
+						<div class="col-md-12 form-group">
+							<label class="control-label">Шаблон для ролика (по умолчанию используется view)</label>
+							<?= Html::activeInput('text', $model, 'template', ['class' => 'form-control', 'style' => 'width:200px']) ?>
+            			</div>
+					</div>
+
+				</div>
+
+
+				<div class="box-footer clearfix">
+				    <div class="form-group">
+						<?= Html::submitButton('Добавить', ['class' => 'btn btn-success']) ?>
+						<?= Html::a('К списку', ['list-feeds'], ['class' => 'btn btn-warning']) ?>
+					</div>
+				</div>
+
+			<?php ActiveForm::end(); ?>
 
 		</div>
+
 	</div>
-</section>
+</div>
 
 <?php
 

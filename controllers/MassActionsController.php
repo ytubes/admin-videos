@@ -109,12 +109,7 @@ class MassActionsController extends Controller
 	        }
 		}
 
-		$users = User::find()
-			->select(['user_id', 'username'])
-			->asArray()
-			->all();
-
-		$listUser = array_column($users, 'username', 'user_id');
+		$listUser = User::listUser();
 
         return $this->renderAjax('change_user', [
             'listUser' => $listUser,
