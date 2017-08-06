@@ -54,7 +54,14 @@ $this->params['breadcrumbs'][] = $this->title;
 					</tr>
 					<tr>
 						<td>
-							<h4>Очистка "похожие видео"</h4>
+							<h4>Перегенерировать "похожие" видео</h4>
+							<div class="text-red">Внимание! Данная функция запускает очень медленный процесс.</div>
+						</td>
+						<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-success" id="regenerate-related" data-action="<?=Url::to(['regenerate-related'])?>">Запустить генерацию</button></td>
+					</tr>
+					<tr>
+						<td>
+							<h4>Очистить "похожие" видео</h4>
 							<div class="text-muted">"Похожие" ролики будут полностью удалены из базы.</div>
 						</td>
 						<td style="vertical-align:middle;"><button type="button" class="btn btn-block btn-warning" id="clear_related" data-action="<?=Url::to(['clear-related'])?>">Очистить "похожие"</button></td>
@@ -114,6 +121,27 @@ $js = <<< 'JS'
 			.done(function() {
 			    bttn.prop('disabled', false);
 			});
+		});
+
+		$('#regenerate-related').click(function(event) {
+			event.preventDefault();
+			var bttn = $(this);
+			var actionUrl = $(this).data('action');
+
+			bttn.prop('disabled', true);
+
+			if (confirm('Запустить генерацию "похожих" видео (очень медленно)?')) {
+				$.post(actionUrl, function( data ) {
+					if (data.success == true) {
+						toastr.success('"Похожие" видео сгенерированы.', 'Успех!');
+					} else {
+						toastr.warning('что-то пошло не так', 'Внимание!');
+					}
+				}, 'json')
+				.done(function() {
+				    bttn.prop('disabled', false);
+				});
+			}
 		});
 
 		$('#random_date').click(function(event) {

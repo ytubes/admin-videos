@@ -56,6 +56,7 @@ class ToolsController extends Controller
                     'clear-related' => ['POST'],
                     'recalculate-categories-videos' => ['POST'],
                     'set-categories-thumbs' => ['POST'],
+                    'regenerate-related' => ['POST'],
                 ],
             ],
 	        'contentNegotiator' => [
@@ -67,6 +68,7 @@ class ToolsController extends Controller
 	            	'clear-related',
 	            	'recalculate-categories-videos',
 	            	'set-categories-thumbs',
+	            	'regenerate-related',
 	            ],
 	            'formatParam' => '_format',
 	            'formats' => [
@@ -175,6 +177,22 @@ class ToolsController extends Controller
         $model = new Tools();
 
         if ($model->load([$model->formName() => $this->request->post()]) && $model->setCategoriesThumbs()) {
+            return ['success' => true];
+        } else {
+            return ['success' => false];
+        }
+    }
+    /**
+     * Перегенерация "похожих" видео.
+     *
+     * @return json
+     */
+    public function actionRegenerateRelated()
+    {
+        set_time_limit(0);
+        $model = new Tools();
+
+        if ($model->load([$model->formName() => $this->request->post()]) && $model->regenerateRelated()) {
             return ['success' => true];
         } else {
             return ['success' => false];
