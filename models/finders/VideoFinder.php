@@ -39,9 +39,7 @@ class VideoFinder extends Model
     public function rules()
     {
         return [
-            [['user_id', 'status'], 'integer'],
-            [['per_page'], 'integer', 'max' => 1000],
-
+            [['user_id', 'status', 'per_page'], 'integer'],
             [['show_thumb', 'bulk_edit'], 'boolean'],
 
 			['videos_ids', 'filter', 'skipOnEmpty' => true, 'filter' => function ($value) {
