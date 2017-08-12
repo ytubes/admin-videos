@@ -42,14 +42,14 @@ class VideoFinder extends Model
             [['user_id', 'status', 'per_page'], 'integer'],
             [['show_thumb', 'bulk_edit'], 'boolean'],
 
-			['videos_ids', 'filter', 'skipOnEmpty' => true, 'filter' => function ($value) {
-				return StringHelper::explode($value, $delimiter = ',', true, true);
-			}],
+            ['videos_ids', 'filter', 'skipOnEmpty' => true, 'filter' => function ($value) {
+                return StringHelper::explode($value, $delimiter = ',', true, true);
+            }],
             ['videos_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true],
-			['videos_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
+            ['videos_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
 
             ['categories_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true ],
-			['categories_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
+            ['categories_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
 
             [['title'], 'string'],
             ['title', 'filter', 'filter' => 'trim', 'skipOnEmpty' => true],
@@ -66,13 +66,13 @@ class VideoFinder extends Model
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
-		        'pageSize' => $this->per_page,
-		    ],
-		    'sort'=> [
-		    	'defaultOrder' => [
-		    		'published_at' => SORT_DESC,
-		    	],
-		    ],
+                'pageSize' => $this->per_page,
+            ],
+            'sort'=> [
+                'defaultOrder' => [
+                    'published_at' => SORT_DESC,
+                ],
+            ],
         ]);
 
         $this->load($params);
@@ -85,14 +85,14 @@ class VideoFinder extends Model
 
         $dataProvider->pagination->pageSize = $this->per_page;
 
-		if ($this->title) {
-			$query
-				->select(['*', 'MATCH (`title`, `description`, `short_description`) AGAINST (:query) AS `relevance`'])
-            	->where('MATCH (`title`, `description`, `short_description`) AGAINST (:query IN BOOLEAN MODE)', [
-	                ':query'=> $this->title,
-	            ])
-            	->orderBy(['relevance' => SORT_DESC]);
-		}
+        if ($this->title) {
+            $query
+                ->select(['*', 'MATCH (`title`, `description`, `short_description`) AGAINST (:query) AS `relevance`'])
+                ->where('MATCH (`title`, `description`, `short_description`) AGAINST (:query IN BOOLEAN MODE)', [
+                    ':query'=> $this->title,
+                ])
+                ->orderBy(['relevance' => SORT_DESC]);
+        }
 
         $query->andFilterWhere([
             'video_id' => $this->videos_ids,
@@ -103,26 +103,26 @@ class VideoFinder extends Model
         return $dataProvider;
     }
 
-	public static function find()
-	{
-		return Video::find();
-	}
-	public static function findById($id)
-	{
-		return self::find()
-			->where(['video_id' => $id])
-			->one();
-	}
-	public static function findBySourceUrl($source_url)
-	{
-		return self::find()
-			->where(['source_url' => $source_url])
-			->one();
-	}
-	public static function findByEmbedCode($embed_code)
-	{
-		return self::find()
-			->where(['embed' => $embed_code])
-			->one();
-	}
+    public static function find()
+    {
+        return Video::find();
+    }
+    public static function findById($id)
+    {
+        return self::find()
+            ->where(['video_id' => $id])
+            ->one();
+    }
+    public static function findBySourceUrl($source_url)
+    {
+        return self::find()
+            ->where(['source_url' => $source_url])
+            ->one();
+    }
+    public static function findByEmbedCode($embed_code)
+    {
+        return self::find()
+            ->where(['embed' => $embed_code])
+            ->one();
+    }
 }
