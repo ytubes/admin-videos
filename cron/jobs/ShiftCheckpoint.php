@@ -46,7 +46,6 @@ class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHan
             return;
         }
 
-        $transaction = RotationStats::getDb()->beginTransaction();
         try {
 
             foreach ($thumbStats as $thumbStat) {
@@ -72,14 +71,8 @@ class ShiftCheckpoint extends \yii\base\Object //implements Task\Handler\TaskHan
                     ->execute();
             }
 
-            $transaction->commit();
-
         } catch(\Exception $e) {
-            $transaction->rollBack();
-
             throw $e;
-        } catch(\Throwable $e) {
-            $transaction->rollBack();
         }
     }
 
