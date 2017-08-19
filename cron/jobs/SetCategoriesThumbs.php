@@ -63,8 +63,8 @@ class SetCategoriesThumbs
 
                     if ($img instanceof Image) {
                         Yii::$app->db->createCommand()
-                        	->update(Category::tableName(), ['image' => $img->filepath], "`category_id`={$category['category_id']}")
-                        	->execute();
+                            ->update(Category::tableName(), ['image' => $img->filepath], "`category_id`={$category['category_id']}")
+                            ->execute();
                     }
 
                         // Записать, что данная тумба уже используется.
