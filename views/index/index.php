@@ -109,7 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
 			            [
 			            	'attribute' => 'published_at',
 			            	'label' => Yii::t('app', 'published_at'),
-			            	//'datetimeFormat' => 'php:d M, Y H:i',
+			            	'format' => 'html',
 			            	'value' => function ($data) {
 			            		return Yii::$app->formatter->asDateTime($data->published_at);
 			            	},
