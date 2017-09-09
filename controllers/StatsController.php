@@ -55,11 +55,17 @@ class StatsController extends Controller
     public function actionIndex()
     {
 		$data = [
+			'total_rows' => RotationStats::find()->alias('vs')->leftJoin(['v' => 'videos'], '`vs`.`video_id`=`v`.`video_id`')->where(['v.status' => 10])->count(),
+			'tested_rows' => RotationStats::find()->alias('vs')->leftJoin(['v' => 'videos'], '`vs`.`video_id`=`v`.`video_id`')->where(['vs.tested_image' => 1, 'v.status' => 10])->count(),
+			'test_rows' => RotationStats::find()->alias('vs')->leftJoin(['v' => 'videos'], '`vs`.`video_id`=`v`.`video_id`')->where(['vs.tested_image' => 0, 'v.status' => 10])->count(),
+			'tested_zero_ctr' => RotationStats::find()->alias('vs')->leftJoin(['v' => 'videos'], '`vs`.`video_id`=`v`.`video_id`')->where(['vs.tested_image' => 1, 'vs.ctr' => 0, 'v.status' => 10])->count(),
+		];
+		/*$data = [
 			'total_rows' => RotationStats::find()->count(),
 			'tested_rows' => RotationStats::find()->where(['tested_image' => 1])->count(),
 			'test_rows' => RotationStats::find()->where(['tested_image' => 0])->count(),
 			'tested_zero_ctr' => RotationStats::find()->where(['tested_image' => 1, 'ctr' => 0])->count(),
-		];
+		];*/
 
 
 			// Статистика по категориям.
@@ -72,15 +78,36 @@ class StatsController extends Controller
 		WHERE `category_id`=2 AND `tested_image`=0
 		GROUP BY `category_id`*/
 
-		$totalItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` GROUP BY `category_id`')
+		//$totalItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` GROUP BY `category_id`')
+		$totalItems = Yii::$app->db->createCommand('
+				SELECT `category_id`, COUNT(*) as `cnt`
+				FROM `videos_stats` AS `vs`
+				LEFT JOIN `videos` AS `v` ON (`vs`.`video_id`=`v`.`video_id`)
+				WHERE `v`.`status` = 10
+				GROUP BY `vs`.`category_id`
+			')
             ->queryAll();
         $totalItems = array_column($totalItems, 'cnt', 'category_id');
 
-		$testedItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` WHERE `tested_image`=1 GROUP BY `category_id`')
+		//$testedItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` WHERE `tested_image`=1 GROUP BY `category_id`')
+		$testedItems = Yii::$app->db->createCommand('
+				SELECT `category_id`, COUNT(*) as `cnt`
+				FROM `videos_stats` AS `vs`
+				LEFT JOIN `videos` AS `v` ON (`vs`.`video_id`=`v`.`video_id`)
+				WHERE `vs`.`tested_image`=1 AND `v`.`status` = 10
+				GROUP BY `vs`.`category_id`
+			')
             ->queryAll();
         $testedItems = array_column($testedItems, 'cnt', 'category_id');
 
-		$testItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` WHERE `tested_image`=0 GROUP BY `category_id`')
+		//$testItems = Yii::$app->db->createCommand('SELECT `category_id`, COUNT(*) as `cnt` FROM `videos_stats` WHERE `tested_image`=0 GROUP BY `category_id`')
+		$testItems = Yii::$app->db->createCommand('
+				SELECT `category_id`, COUNT(*) as `cnt`
+				FROM `videos_stats` AS `vs`
+				LEFT JOIN `videos` AS `v` ON (`vs`.`video_id`=`v`.`video_id`)
+				WHERE `vs`.`tested_image`=0 AND `v`.`status` = 10
+				GROUP BY `vs`.`category_id`
+			')
             ->queryAll();
         $testItems = array_column($testItems, 'cnt', 'category_id');
 
