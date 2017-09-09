@@ -9,6 +9,7 @@ use yii\base\Model;
 use yii\helpers\StringHelper;
 
 use ytubes\videos\models\Video;
+use ytubes\videos\models\VideosCategoriesMap;
 use ytubes\videos\models\RotationStats;
 use ytubes\videos\models\Category;
 
@@ -19,7 +20,7 @@ class VideoFinder extends Model
 {
     public $per_page = 50;
     public $videos_ids = '';
-    public $categories_ids = [];
+    public $category_id;
     public $user_id;
     public $status;
     public $title;
@@ -39,7 +40,7 @@ class VideoFinder extends Model
     public function rules()
     {
         return [
-            [['user_id', 'status', 'per_page'], 'integer'],
+            [['user_id', 'status', 'per_page', 'category_id'], 'integer'],
             [['show_thumb', 'bulk_edit'], 'boolean'],
 
             ['videos_ids', 'filter', 'skipOnEmpty' => true, 'filter' => function ($value) {
@@ -48,8 +49,8 @@ class VideoFinder extends Model
             ['videos_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true],
             ['videos_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
 
-            ['categories_ids', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true ],
-            ['categories_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
+            //['category_id', 'each', 'rule' => ['integer'], 'skipOnEmpty' => true ],
+            //['categories_ids', 'filter', 'filter' => 'array_filter', 'skipOnEmpty' => true],
 
             [['title'], 'string'],
             ['title', 'filter', 'filter' => 'trim', 'skipOnEmpty' => true],
@@ -61,7 +62,8 @@ class VideoFinder extends Model
      */
     public function search($params)
     {
-        $query = self::find();
+        $query = self::find()
+        	->alias('v');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -87,17 +89,22 @@ class VideoFinder extends Model
 
         if ($this->title) {
             $query
-                ->select(['*', 'MATCH (`title`, `description`, `short_description`) AGAINST (:query) AS `relevance`'])
-                ->where('MATCH (`title`, `description`, `short_description`) AGAINST (:query IN BOOLEAN MODE)', [
+                ->select(['v.*', 'MATCH (`v`.`title`, `v`.`description`, `v`.`short_description`) AGAINST (:query) AS `relevance`'])
+                ->where('MATCH (`v`.`title`, `v`.`description`, `v`.`short_description`) AGAINST (:query IN BOOLEAN MODE)', [
                     ':query'=> $this->title,
                 ])
                 ->orderBy(['relevance' => SORT_DESC]);
         }
 
+		if (!empty($this->category_id)) {
+			$query->leftJoin(['vcm' => VideosCategoriesMap::tableName()], '`v`.`video_id` = `vcm`.`video_id`');
+		}
+
         $query->andFilterWhere([
-            'video_id' => $this->videos_ids,
-            'user_id' => $this->user_id,
-            'status' => $this->status,
+            'v.video_id' => $this->videos_ids,
+            'v.user_id' => $this->user_id,
+            'v.status' => $this->status,
+            'vcm.category_id' => $this->category_id,
         ]);
 
         return $dataProvider;

@@ -128,24 +128,19 @@ class CategoryFinder extends Model
 		}
 
 		return null;
-	}
+	}*/
 
-	public function getCategoriesIdsNamesArray()
+	public static function getDropDownList()
 	{
-		if (null === $this->categoriesIdsNamesArray) {
-			$categories = self::find()
-				->select(['category_id', 'title'])
-				->indexBy('category_id')
-				->asArray()
-				->all();
+		$categories = self::find()
+			->select(['category_id', 'title'])
+			->asArray()
+			->all();
 
-			if (!empty($categories)) {
-				$this->categoriesIdsNamesArray = array_column($categories, 'title', 'category_id');
-			} else {
-				$this->categoriesIdsNamesArray = [];
-			}
+		if (!empty($categories)) {
+			return array_column($categories, 'title', 'category_id');
 		}
 
-		return $this->categoriesIdsNamesArray;
-	}*/
+		return $categories;
+	}
 }
