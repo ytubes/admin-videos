@@ -28,12 +28,13 @@ use yii\helpers\Html;
     		<ul id="sortable" class="categories-list">
     		<?php foreach ($categories as $category): ?>
 
-				<li class="categories-list__item <?= ($category->category_id === $active_id)? 'active' : ''?>" data-key="<?= $category->category_id ?>" data-position="<?= $category->position ?>" data-title="<?= $category->title ?>" data-ctr="<?= $category->ctr ?>">
+				<li class="categories-list__item <?= ($category->category_id === $active_id)? 'active' : ''?> <?= (!$category->isActive()) ? 'bg-pink--horizontal-gradient' : '' ?>" data-key="<?= $category->category_id ?>" data-position="<?= $category->position ?>" data-title="<?= $category->title ?>" data-ctr="<?= $category->ctr ?>">
 					<span class="categories-list__span categories-list__span--id"><?= $category->category_id ?>: </span><?= Html::a($category->title, ['update', 'id' => $category->category_id], ['title' => 'Редактирование', 'class' => 'categories-list__a categories-list__a--title']) ?>
 					<ul class="categories-list__actions action-buttons pull-right">
+						<?php $icon = ($category->isActive()) ? '<span class="glyphicon glyphicon-eye-open"></span>' : '<span class="glyphicon glyphicon-eye-close text-red"></span>' ?>
 						<li class="action-buttons__item">
 							<?= Html::a(
-								'<span class="glyphicon glyphicon-eye-open"></span>',
+								$icon,
 								['view', 'id' => $category->category_id],
 								[
 									'title' => 'Просмотр информации',

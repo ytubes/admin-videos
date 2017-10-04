@@ -50,15 +50,13 @@ $this->params['breadcrumbs'][] = 'Редактирование';
 
 	            <div class="box-body pad">
 
-					<?= $form->field($model, 'position')->textInput() ?>
+					<?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
 					<?= $form->field($model, 'slug')->textInput(['maxlength' => true]) ?>
 
 					<?= $form->field($model, 'meta_title')->textInput(['maxlength' => true]) ?>
 
 					<?= $form->field($model, 'meta_description')->textInput(['maxlength' => true]) ?>
-
-					<?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
 					<?= $form->field($model, 'h1')->textInput(['maxlength' => true]) ?>
 
@@ -75,6 +73,8 @@ $this->params['breadcrumbs'][] = 'Редактирование';
 					<?= $form->field($model, 'on_index')->checkbox() ?>
 
 					<?= $form->field($model, 'reset_clicks_period')->textInput() ?>
+
+					<?= $form->field($model, 'enabled')->checkbox() ?>
 
 				</div>
 

@@ -69,6 +69,7 @@ $this->params['breadcrumbs'][] = 'Информация';
 			            'clicks',
 			            'ctr',
 			            'reset_clicks_period',
+			            'enabled',
 			            'created_at',
 			            'updated_at',
 			        ],
