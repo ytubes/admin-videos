@@ -263,11 +263,11 @@ class CategoriesImport extends Model
         }
 
         if (isset($newCategory['meta_description'])) {
-            $newCategory['meta_title'] = StringHelper::truncate($newCategory['meta_title'], 255, false);
+            $newCategory['meta_description'] = StringHelper::truncate($newCategory['meta_description'], 250, false);
         }
 
         if (isset($newCategory['meta_title'])) {
-            $newCategory['meta_title'] = StringHelper::truncate($newCategory['meta_title'], 255, false);
+            $newCategory['meta_title'] = StringHelper::truncate($newCategory['meta_title'], 250, false);
         }
 
         $category->attributes = $newCategory;
